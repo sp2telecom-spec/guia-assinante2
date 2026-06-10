@@ -143,6 +143,13 @@ html, body {
 </div>
 
 <script>
+// ============================================================================
+// CONFIGURAÇÃO DE CALIBRAÇÃO MANUAL DE HORÁRIO
+// Se a programação ainda aparecer adiantada ou atrasada na sua TV, mude aqui:
+// Exemplo: -3 para voltar 3 horas, 3 para adiantar 3 horas, 0 para o padrão.
+const AJUSTE_MANUAL_HORAS = 0; 
+// ============================================================================
+
 // ===== FONTES DE EPG =====
 const EPG_URLS = [
   "epg.xml",
@@ -253,20 +260,39 @@ function atualizarRelogio(){
 setInterval(atualizarRelogio, 1000);
 atualizarRelogio();
 
-/* ===== NOVA FUNÇÃO DE TRATAMENTO DE DATAS XMLTV (CORRIGIDA) ===== */
-function parseDate(t){
-  if(!t) return 0;
-  
-  const math = t.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
-  if (!math) return 0;
-  
-  const isoStr = `${math[1]}-${math[2]}-${math[3]}T${math[4]}:${math[5]}:${math[6]}`;
-  
-  const fusoMatch = t.match(/([+-]\d{4})$/);
-  const fuso = fusoMatch ? fusoMatch[1] : "+0000";
-  const fusoFormatado = fuso.substring(0,3) + ":" + fuso.substring(3,5);
-  
-  return new Date(isoStr + fusoFormatado).getTime();
+/* ===== NOVO PARSER ULTRA-COMPATÍVEL COM TVS (MATEMÁTICO) ===== */
+function parseDate(t) {
+  if (!t) return 0;
+
+  // Separa o texto em blocos. Ex: ["20260610203000", "+0000"]
+  const partes = t.trim().split(/\s+/);
+  const limpo = partes[0];
+  const fusoOriginal = partes[1] || "+0000";
+
+  if (limpo.length < 12) return 0;
+
+  // Extrai os números de forma manual (evita bugs de interpretadores ISO)
+  const ano = parseInt(limpo.substring(0, 4), 10);
+  const mes = parseInt(limpo.substring(4, 6), 10) - 1;
+  const dia = parseInt(limpo.substring(6, 8), 10);
+  const hora = parseInt(limpo.substring(8, 10), 10);
+  const min = parseInt(limpo.substring(10, 12), 10);
+  const seg = limpo.length >= 14 ? parseInt(limpo.substring(12, 14), 10) : 0;
+
+  // Converte direto para milissegundos UTC puros
+  let utcMs = Date.UTC(ano, mes, dia, hora, min, seg);
+
+  // Calcula o fuso horário descrito dentro do próprio XML de forma matemática
+  const sinal = fusoOriginal.charAt(0) === '-' ? -1 : 1;
+  const fusoHoras = parseInt(fusoOriginal.substring(1, 3), 10);
+  const fusoMinutos = parseInt(fusoOriginal.substring(3, 5), 10);
+  const offsetMs = ((fusoHoras * 60) + fusoMinutos) * 60 * 1000;
+
+  // Aplica a correção de fuso original do arquivo
+  utcMs = utcMs - (sinal * offsetMs);
+
+  // Aplica a calibração manual do usuário (AJUSTE_MANUAL_HORAS)
+  return utcMs + (AJUSTE_MANUAL_HORAS * 60 * 60 * 1000);
 }
 
 function calc(start, stop){
@@ -277,6 +303,7 @@ function calc(start, stop){
 
 function hora(timestamp){
   if(!timestamp) return "--:--";
+  // O construtor lê os milissegundos absolutos e o sistema operacional aplica o fuso local
   const d = new Date(timestamp);
   return d.getHours().toString().padStart(2,"0") + ":" +
          d.getMinutes().toString().padStart(2,"0");
