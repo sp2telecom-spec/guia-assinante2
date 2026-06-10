@@ -6,51 +6,49 @@
 
 <style>
 html, body {
-  width: 1920px; /* Ou 100% se preferir */
+  width: 100%;
   height: 1080px;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: transparent !important; /* Adicione o !important aqui */
-  background-color: transparent !important; /* Adicione esta linha também */
+  background: transparent; 
   font-family: Arial, sans-serif;
   color: #fff;
 }
 
-/* CONTAINER PRINCIPAL: Ocupa a tela toda e fica fixado na parte inferior */
+/* CONTAINER PRINCIPAL: Fundo alterado para totalmente transparente */
 .carousel-container {
   width: 100%;
   position: fixed;
   bottom: 0;
   left: 0;
-  /* Fundo escuro semi-transparente apenas na barra do rodapé para destacar as informações */
-  background: rgba(10, 10, 10, 0.75);
-  backdrop-filter: blur(10px);
+  background: transparent !important; /* Totalmente transparente */
+  backdrop-filter: none !important;    /* Remove o embaçado do fundo */
   padding: 20px 0;
   box-sizing: border-box;
   z-index: 9999;
 }
 
-/* JANELA DE CORTE INTERNA: Garante que o grid use 100% da largura útil */
+/* JANELA DE CORTE INTERNA */
 .carousel-wrapper {
   overflow: hidden;
-  width: calc(100% - 80px); /* Desconto para as margens laterais */
+  width: calc(100% - 80px); 
   margin: 0 auto;
 }
 
-/* GRID ESTRUTURADO: Exatamente 3 colunas por 2 linhas */
+/* GRID ESTRUTURADO: 3 colunas por 2 linhas */
 .carousel-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 180px); /* Altura original do seu card */
-  gap: 18px; /* Espaçamento original do seu estilo */
+  grid-template-rows: repeat(2, 180px); 
+  gap: 18px; 
   width: 100%;
 }
 
-/* CARD CANAL (Seu estilo original mantido, apenas sem largura mínima rígida para se ajustar ao Grid) */
+/* CARD CANAL (O fundo interno do card foi mantido para que os textos continuem legíveis) */
 .channel {
   height: 180px;
-  background: rgba(20, 20, 20, 0.6);
+  background: rgba(20, 20, 20, 0.8); /* Escuro semi-transparente para leitura */
   backdrop-filter: blur(14px);
   border-radius: 16px;
   padding: 10px;
@@ -97,7 +95,7 @@ html, body {
 
 .bar {
   height: 100%;
-  background: #00c853; /* verde estilo moderno */
+  background: #00c853; 
   border-radius: 10px;
 }
 </style>
@@ -119,7 +117,7 @@ const EPG_URLS = [
   "https://epg.pw/xmltv/epg_BR.xml"
 ];
 
-// SUA LISTA DE CANAIS COMPLETA MANTIDA
+// LISTA DE CANAIS MANTIDA
 const canais = [
   {num:"01.1", nome:"JOVEM PAN", id:["Jovem.Pan.News.br","JovemPan.br","JovemPanNews.br","417187"], logo:"https://upload.wikimedia.org/wikipedia/commons/4/41/Logotipo_da_TV_Jovem_Pan_News.png"},
   {num:"01.3", nome:"H&H HD", id:["Sao.Paulo/SP..Discovery.Home.and.Health.br","São.Paulo/SP..Discovery.Home.and.Health.HD.br","DiscoveryHomeHealth.br","523310"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/90/Discovery_H%26H_Logo_2022.webp"},
@@ -205,9 +203,9 @@ const canais = [
   {num:"69.5", nome:"CAZE TV", id:["Caze.tv","CazeTV.br"], logo:"https://upload.wikimedia.org/wikipedia/pt/2/22/Logotipo_da_Caz%C3%A9TV.png"}
 ];
 
-let cacheProgramas = []; // Armazena globalmente a EPG carregada das fontes XML
+let cacheProgramas = []; 
 let paginaAtual = 0;
-const itensPorPagina = 6; // 3 colunas x 2 linhas = 6 canais por tela
+const itensPorPagina = 6; 
 
 /* ===== RELÓGIO ===== */
 function atualizarRelogio(){
@@ -255,7 +253,7 @@ function hora(t){
          d.getMinutes().toString().padStart(2,"0");
 }
 
-/* RENDERIZADOR BASEADO EM PAGINAÇÃO COMPACTA (Grid 2x3) */
+/* RENDERIZADOR */
 function renderizarSlide() {
   const box = document.getElementById("carousel");
   if (!box) return;
@@ -263,7 +261,6 @@ function renderizarSlide() {
   box.innerHTML = "";
   const now = Date.now();
 
-  // Mapeia os 6 canais correspondentes à página atual do carrossel
   const inicioIndex = paginaAtual * itensPorPagina;
   const fimIndex = inicioIndex + itensPorPagina;
   const canaisDaPagina = canais.slice(inicioIndex, fimIndex);
@@ -316,7 +313,7 @@ function renderizarSlide() {
   box.innerHTML = htmlFinal;
 }
 
-/* CARREGAMENTO DE DATA E ATUALIZAÇÃO DOS ARQUIVOS XML */
+/* FILTRAGEM E DOWNLOAD DA EPG */
 function atualizar(){
   const agora = Date.now();
   const todosOsIdsValidos = canais.flatMap(c => c.id);
@@ -358,25 +355,24 @@ function atualizar(){
 
   Promise.all(requisicoes).then(resultados => {
     cacheProgramas = resultados.flat();
-    renderizarSlide(); // renderiza os dados assim que o download terminar
+    renderizarSlide(); 
   });
 }
 
-// Inicializa a coleta de dados de EPG
 atualizar();
 setInterval(atualizar, 60000);
 
-/* SISTEMA AUTOMÁTICO DE CARROSSEL POR PÁGINAS (Troca a cada 15 Segundos) */
+/* TROCA AUTOMÁTICA (15 Segundos) */
 setInterval(() => {
   const totalPaginas = Math.ceil(canais.length / itensPorPagina);
   
   paginaAtual++;
   if (paginaAtual >= totalPaginas) {
-    paginaAtual = 0; // Volta para a primeira página (Loop)
+    paginaAtual = 0; 
   }
   
   renderizarSlide();
-}, 15000); // Exatamente 15 segundos
+}, 15000); 
 </script>
 
 </body>
