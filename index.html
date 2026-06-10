@@ -6,41 +6,48 @@
   <title>Carrossel de Canais</title>
   <style>
     body {
-      background-color: #111;
+      /* Remove o fundo escuro da tela inteira e deixa transparente */
+      background-color: transparent;
       font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
+      padding: 0;
+      height: 100vh;
+      position: relative;
     }
 
-    /* Container geral do carrossel */
+    /* CONTAINER PRINCIPAL: Ocupa toda a largura da tela e fica fixado no rodapé */
     .carousel-container {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 100%;
-      max-width: 600px; /* Largura reduzida para cards mais estreitos */
-      margin: 0 auto;
+      justify-content: space-between;
+      width: 100%; 
+      position: fixed; 
+      bottom: 0; 
+      left: 0;
+      /* Mantém um fundo escuro semi-transparente apenas na barra para destacar os cards */
+      background: rgba(17, 17, 17, 0.85); 
+      box-shadow: 0 -5px 15px rgba(0,0,0,0.5); 
+      padding: 10px 0;
+      box-sizing: border-box;
+      z-index: 9999;
     }
 
-    /* Janela que esconde os elementos fora de foco */
+    /* Janela de corte interna */
     .carousel-wrapper {
       overflow: hidden;
       width: 100%;
+      margin: 0 10px;
     }
 
     /* O Grid estruturado em 3 colunas e 2 linhas fixas */
     .carousel-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr); /* 3 colunas */
-      grid-template-rows: repeat(2, 110px);   /* 2 linhas com altura fixa */
+      grid-template-columns: repeat(3, 1fr); 
+      grid-template-rows: repeat(2, 110px);   
       gap: 12px;
-      padding: 10px;
     }
 
-    /* Card de canal mais estreito e vertical */
+    /* Card de canal estreito */
     .canal-card {
       background: #222;
       color: #fff;
@@ -56,7 +63,7 @@
       border: 1px solid #333;
     }
 
-    /* Logo adaptada ao formato estreito */
+    /* Logo adaptada */
     .canal-logo {
       max-width: 65px;
       max-height: 40px;
@@ -84,11 +91,11 @@
       background: rgba(255, 255, 255, 0.1);
       color: white;
       border: none;
-      padding: 15px 12px;
+      padding: 20px 15px;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 20px;
       border-radius: 6px;
-      margin: 0 5px;
+      margin: 0 10px;
       transition: background 0.2s;
     }
     
@@ -111,7 +118,6 @@
   </div>
 
   <script>
-    // Lista reduzida de canais para teste básico
     const canais = [
       {num:"01.1", nome:"JOVEM PAN", id:["Jovem.Pan.News.br","JovemPan.br","JovemPanNews.br","417187"], logo:"https://upload.wikimedia.org/wikipedia/commons/4/41/Logotipo_da_TV_Jovem_Pan_News.png"},
       {num:"01.3", nome:"H&H HD", id:["Sao.Paulo/SP..Discovery.Home.and.Health.br","DiscoveryHomeHealth.br","523310"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/90/Discovery_H%26H_Logo_2022.webp"},
@@ -125,18 +131,17 @@
     ];
 
     let slideAtual = 0;
-    const itensPorSlide = 6; // 3 colunas x 2 linhas = 6 cards por vez
+    const itensPorSlide = 6; 
+    let intervaloAuto; 
 
     function renderizarSlide() {
       const grid = document.getElementById("carouselGrid");
       grid.innerHTML = "";
 
-      // Mapeia quais itens devem aparecer na página atual
       const inicio = slideAtual * itensPorSlide;
       const fim = inicio + itensPorSlide;
       const canaisDoSlide = canais.slice(inicio, fim);
 
-      // Injeta a estrutura HTML de cada card
       canaisDoSlide.forEach(canal => {
         const card = document.createElement("div");
         card.className = "canal-card";
@@ -156,7 +161,6 @@
       
       slideAtual += direcao;
 
-      // Retorna ao início ou vai ao fim se estourar o limite da lista (Loop)
       if (slideAtual >= totalSlides) {
         slideAtual = 0;
       } else if (slideAtual < 0) {
@@ -164,10 +168,24 @@
       }
 
       renderizarSlide();
+      reiniciarAutoplay(); 
     }
 
-    // Inicializa a primeira página ao carregar a estrutura
-    document.addEventListener("DOMContentLoaded", renderizarSlide);
+    function iniciarAutoplay() {
+      intervaloAuto = setInterval(() => {
+        mudarSlide(1);
+      }, 15000); 
+    }
+
+    function reiniciarAutoplay() {
+      clearInterval(intervaloAuto);
+      iniciarAutoplay();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderizarSlide();
+      iniciarAutoplay();
+    });
   </script>
 
 </body>
