@@ -25,7 +25,7 @@ html, body {
   right: 40px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* Alinha o texto elegantemente à direita */
+  align-items: flex-end; 
   gap: 4px;
   padding: 15px 25px;
   background: rgba(15, 15, 15, 0.6);
@@ -52,7 +52,7 @@ html, body {
   font-size: 16px;
   font-weight: 400;
   opacity: 0.9;
-  text-transform: capitalize; /* Deixa o dia da semana bonitinho */
+  text-transform: capitalize; 
 }
 
 .widget-moderno .clima-grupo {
@@ -200,8 +200,10 @@ html, body {
 
 <script>
 // ============================================================================
-// CALIBRAÇÃO DE FUSO HORÁRIO (SÃO PAULO / BRASÍLIA)
-const AJUSTE_MANUAL_HORAS = -4; 
+// AJUSTE FINO DE PROGRAMAÇÃO (Se necessário)
+// O fuso de São Paulo agora é automático. Use esta variável APENAS se quiser
+// adiantar ou atrasar os cards em minutos (Ex: 60 para adiantar 1 hora).
+const ADICIONAR_MINUTOS = 0; 
 // ============================================================================
 
 const EPG_URLS = ["epg1.xml", "epg2.xml"];
@@ -259,7 +261,7 @@ const canais = [
   {num:"35.5", nome:"SPACE", id:["Sao.Paulo/SP..Space.br","São.Paulo/SP..Space.HD.³.br","Space.br","425968","426009","523347"], logo:"https://upload.wikimedia.org/wikipedia/commons/1/1a/SpaceLogo.svg"},
   {num:"35.5", nome:"CINE BRASIL", id:["Sao.Paulo/SP..Cine.Brasil","CineBrasilTV.br"], logo:"https://www.cinebrasil.tv/images/semFoto.png"},
   {num:"38.1", nome:"TV APARECIDA", id:["Sao.Paulo/SP..TV.Aparecida.br","Belo.Horizonte/MG...TV.Aparecida.(espelho).br","TVAparecida.br","523345"], logo:"https://upload.wikimedia.org/wikipedia/pt/1/1e/Logotipo_da_TV_Aparecida.png"},
-  {num:"39.1", nome:"SBT", id:["Sao.Paulo/SP..SBT.br","São.Paulo/SP..SBT.HD.br","SBT.br","523298"], logo:"https://upload.wikimedia.org/wikipedia/pt/4/41/Logotipo do SBT.svg"},
+  {num:"39.1", nome:"SBT", id:["Sao.Paulo/SP..SBT.br","São.Paulo/SP..SBT.HD.br","SBT.br","523298"], logo:"https://upload.wikimedia.org/wikipedia/pt/4/41/Logotipo_do_SBT.svg"},
   {num:"41.1", nome:"MAIS FAMILIA", id:["Sao.Paulo/SP..MAIS.FAMILIA.br","RedeMaisFamilia.br"], logo:"https://upload.wikimedia.org/wikipedia/pt/3/31/Logo-rede-mais-familia.png"},
   {num:"41.2", nome:"BOAS NOVAS", id:["Sao.Paulo/SP..BoasNovas.br","BoasNovas.br"], logo:"https://upload.wikimedia.org/wikipedia/pt/3/39/Rede_Boas_Novas.png"},
   {num:"45.1", nome:"CANAL DO BOI", id:["Campinas/SP..Canal.do.Boi.br","CanalDoBoi.br","523289"], logo:"https://upload.wikimedia.org/wikipedia/commons/c/c3/Logo_Canal_do_Boi_-_PNG.png"},
@@ -295,24 +297,22 @@ let cacheProgramas = [];
 let paginaAtual = 0;
 const itensPorPagina = 6; 
 
-/* ===== SINCRO RELÓGIO E DATA SÃO PAULO (MODERNO) ===== */
+/* ===== SINCRO RELÓGIO E DATA SÃO PAULO (NATIVO/MODERNO) ===== */
 function atualizarRelogio(){
   const agora = new Date();
   
-  // 1. Gera a hora formatada
   const strHora = agora.toLocaleTimeString("pt-BR", {
     timeZone: "America/Sao_Paulo",
     hour: "2-digit",
     minute: "2-digit"
   });
   
-  // 2. Gera o dia da semana abreviado e a data (Ex: sex, 12/06)
   const strData = agora.toLocaleDateString("pt-BR", {
     timeZone: "America/Sao_Paulo",
     weekday: "short",
     day: "2-digit",
     month: "2-digit"
-  }).replace('.', ''); // Remove pontuações indesejadas que alguns navegadores inserem
+  }).replace('.', ''); 
 
   document.getElementById("hora").innerText = strHora;
   document.getElementById("data").innerText = strData;
@@ -344,41 +344,60 @@ async function carregarClima() {
 
     const imgIcone = document.getElementById("icone");
     imgIcone.src = `https://openweathermap.org/img/wn/${icon}@2x.png`;
-    imgIcone.style.display = "block"; // Só mostra o ícone quando ele for carregado
+    imgIcone.style.display = "block"; 
 
   } catch (e) {
     console.log("Erro clima:", e);
   }
 }
 carregarClima();
-setInterval(carregarClima, 600000); // Atualiza o clima a cada 10 minutos
+setInterval(carregarClima, 600000); 
 
-/* ===== PARSER ANALISADOR MATEMÁTICO ===== */
+/* ===== NOVO PARSER NATIVO INTELIGENTE AUTOMÁTICO ===== */
 function parseDate(t) {
   if (!t) return 0;
-  const partes = t.trim().split(/\s+/);
-  const limpo = partes[0];
-  const fusoOriginal = partes[1] || "+0000";
+  
+  // Limpa a string da EPG tirando espaços duplos
+  const limpo = t.trim().replace(/\s+/g, ' ');
+  const partes = limpo.split(' ');
+  const dataString = partes[0]; // Ex: "20260612180000"
+  const offsetString = partes[1] || ""; // Ex: "+0000" ou "-0300"
 
-  if (limpo.length < 12) return 0;
+  if (dataString.length < 14) return 0;
 
-  const ano = parseInt(limpo.substring(0, 4), 10);
-  const mes = parseInt(limpo.substring(4, 6), 10) - 1;
-  const dia = parseInt(limpo.substring(6, 8), 10);
-  const hora = parseInt(limpo.substring(8, 10), 10);
-  const min = parseInt(limpo.substring(10, 12), 10);
-  const seg = limpo.length >= 14 ? parseInt(limpo.substring(12, 14), 10) : 0;
+  // Extrai pedaço por pedaço
+  const ano = dataString.substring(0, 4);
+  const mes = dataString.substring(4, 6);
+  const dia = dataString.substring(6, 8);
+  const hora = dataString.substring(8, 10);
+  const min = dataString.substring(10, 12);
+  const seg = dataString.substring(12, 14);
 
-  let utcMs = Date.UTC(ano, mes, dia, hora, min, seg);
+  // Reconstrói no padrão internacional ISO 8601 estruturado
+  let isoStr = `${ano}-${mes}-${dia}T${hora}:${min}:${seg}`;
 
-  const sinal = fusoOriginal.charAt(0) === '-' ? -1 : 1;
-  const fusoHoras = parseInt(fusoOriginal.substring(1, 3), 10);
-  const fusoMinutos = parseInt(fusoOriginal.substring(3, 5), 10);
-  const offsetMs = ((fusoHoras * 60) + fusoMinutos) * 60 * 1000;
+  // Se a EPG mandar fuso explícito, anexa na string (Ex: +00:00)
+  if (offsetString.length >= 5) {
+    const sinal = offsetString.charAt(0);
+    const fHoras = offsetString.substring(1, 3);
+    const fMins = offsetString.substring(3, 5);
+    isoStr += `${sinal}${fHoras}:${fMins}`;
+  } else {
+    // Se não vier fuso na EPG, assume que o arquivo está em UTC (fuso zero)
+    isoStr += "Z";
+  }
 
-  utcMs = utcMs - (sinal * offsetMs);
+  const parsedDate = new Date(isoStr);
+  let finalMs = parsedDate.getTime();
 
-  return utcMs + (AJUSTE_MANUAL_HORAS * 60 * 60 * 1000);
+  if (isNaN(finalMs)) return 0;
+
+  // Se houver necessidade de ajuste fino forçado em minutos
+  if (ADICIONAR_MINUTOS !== 0) {
+    finalMs += (ADICIONAR_MINUTOS * 60 * 1000);
+  }
+
+  return finalMs;
 }
 
 function calc(start, stop){
@@ -389,6 +408,7 @@ function calc(start, stop){
 
 function hora(timestamp){
   if(!timestamp) return "--:--";
+  // Exibe a hora do card respeitando estritamente o fuso do sistema local de SP
   const d = new Date(timestamp);
   return d.getHours().toString().padStart(2,"0") + ":" +
          d.getMinutes().toString().padStart(2,"0");
