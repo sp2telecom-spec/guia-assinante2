@@ -373,17 +373,19 @@ function renderizarSlide() {
 }
 
 /* ===== FILTRAGEM E DOWNLOAD DA EPG ===== */
+/* ===== FILTRAGEM E DOWNLOAD DA EPG (COM QUEBRA-CACHE) ===== */
 function atualizar(){
   const agora = Date.now();
   const todosOsIdsValidos = canais.flatMap(c => c.id);
 
+  // Adiciona o '?_=' + Date.now() para forçar a TV a buscar o arquivo mais recente
   const requisicoes = EPG_URLS.map(url => 
-    fetch(url)
-      .then(r => r.text())
-      .then(str => new DOMParser().parseFromString(str, "text/xml"))
-      .then(xml => {
-        const elementos = Array.from(xml.querySelectorAll("programme"));
-        const extraidos = [];
+    fetch(`${url}?_=${Date.now()}`) 
+      .then(r => {
+        if (!r.ok) throw new Error(`Erro HTTP: ${r.status}`);
+        return r.text();
+      })
+      // ... o restante do seu código do fetch continua exatamente igual lá de dentro
 
         elementos.forEach(p => {
           const chId = p.getAttribute("channel");
