@@ -1,0 +1,28 @@
+name: Atualizar EPG Diariamente
+
+on:
+  schedule:
+    # Roda todos os dias às 06:00 UTC (03:00 no horário de Brasília)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Permite que você force a atualização manualmente se quiser
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v4
+
+    - name: Baixar o arquivo EPG atualizado
+      run: |
+        # Baixa da fonte mais estável e salva como epg.xml substituindo o antigo
+        curl -L "https://epgshare01.online/epgshare01/epg_ripper_BR1.xml" -o epg.xml
+
+    - name: Commit e Push das alterações
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add epg.xml
+        git diff-index --quiet HEAD || git commit -m "Atualização automática da EPG"
+        git push
