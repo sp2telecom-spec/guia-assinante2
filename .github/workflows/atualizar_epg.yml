@@ -2,11 +2,9 @@ name: Atualizar EPG Diariamente
 
 on:
   schedule:
-    # Roda todos os dias às 06:00 UTC (03:00 no horário de Brasília)
     - cron: '0 6 * * *'
-  workflow_dispatch: # Permite forçar a atualização manualmente
+  workflow_dispatch:
 
-# CORREÇÃO DO AVISO: Força as ações a rodarem no Node.js 24 moderno
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
@@ -18,14 +16,18 @@ jobs:
     - name: Checkout do código
       uses: actions/checkout@v4
 
-    - name: Baixar o arquivo EPG atualizado
+    - name: Baixar os arquivos EPG atualizados
       run: |
-        curl -L "https://epgshare01.online/epgshare01/epg_ripper_BR1.xml" -o epg.xml
+        # Fonte 1: epgshare01
+        curl -L "https://epgshare01.online/epgshare01/epg_ripper_BR1.xml" -o epg1.xml
+        
+        # Fonte 2: epg.pw (ou outra de sua preferência)
+        curl -L "https://epg.pw/xmltv/epg_BR.xml" -o epg2.xml
 
     - name: Commit e Push das alterações
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add epg.xml
-        git diff-index --quiet HEAD || git commit -m "Atualização automática da EPG"
+        git add epg1.xml epg2.xml
+        git diff-index --quiet HEAD || git commit -m "Atualização automática das fontes de EPG"
         git push
