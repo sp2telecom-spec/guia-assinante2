@@ -2,270 +2,432 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>GUIA TV</title>
+<title>GUIA TV + OVERLAY</title>
 
 <style>
-html, body{
-  width:1920px;
-  height:1080px;
-  margin:0;
-  padding:0;
-  overflow:hidden;
-  background:transparent;
-  font-family:Arial, sans-serif;
-  color:#fff;
+html, body {
+  width: 100%;
+  height: 1080px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent; 
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #fff;
 }
 
-/* CARROSSEL */
-#carousel{
-  display:flex;
-  gap:18px;
-  position:absolute;
-  top:40px;
-  left:40px;
-  transition:transform .6s ease;
+/* ==========================================
+   WIDGET DE DATA, HORA E CLIMA (MODERNO)
+   ========================================== */
+.widget-moderno {
+  position: fixed;
+  top: 30px;
+  right: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; 
+  gap: 4px;
+  padding: 15px 25px;
+  background: rgba(15, 15, 15, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  z-index: 10000;
 }
 
-/* CARD CANAL */
-.channel{
-  min-width:300px;
-  height:180px;
+.widget-moderno .hora {
+  font-size: 54px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(0,0,0,0.4);
+}
 
-  background: rgba(20, 20, 20, 0.6);
+.widget-moderno .data-clima {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 400;
+  opacity: 0.9;
+  text-transform: capitalize; 
+}
+
+.widget-moderno .clima-grupo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  padding-left: 12px;
+}
+
+.widget-moderno img {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
+}
+
+/* ==========================================
+   CAROUSEL E GUIA DE PROGRAMAÇÃO
+   ========================================== */
+.carousel-container {
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background: transparent !important; 
+  backdrop-filter: none !important;    
+  padding: 20px 0;
+  box-sizing: border-box;
+  z-index: 9999;
+}
+
+.carousel-wrapper {
+  overflow: hidden;
+  width: calc(100% - 80px); 
+  margin: 0 auto;
+}
+
+.carousel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 140px); 
+  gap: 18px; 
+  width: 100%;
+}
+
+.channel {
+  height: 140px;
+  background: rgba(20, 20, 20, 0.8); 
   backdrop-filter: blur(14px);
-
-  border-radius:16px;
-  padding:10px;
-
-  border:1px solid rgba(255,255,255,0.12);
-}
-/* LOGO */
-.logo{
-  width:100%;
-  height:45px;
-  object-fit:contain;
-  margin-bottom:8px;
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row; 
+  align-items: center; 
+  gap: 15px;               
 }
 
-/* NOME CANAL */
-.title{
-  font-size:17px;
-  font-weight:600;
-  margin-bottom:6px;
+.logo-container {
+  width: 85px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; 
 }
 
-/* PROGRAMA ATUAL */
-.program{
-  font-size:14px;
-  line-height:1.3;
+.logo {
+  max-width: 100%;
+  max-height: 90px;
+  object-fit: contain;
 }
 
-/* PROXIMO */
-.next{
-  font-size:12px;
-  opacity:.7;
-  margin-top:8px;
+.channel-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0; 
 }
 
-/* BARRA PROGRESSO (estilo Claro) */
-.progress{
-  height:4px;
-  background:rgba(255,255,255,0.15);
-  margin-top:10px;
-  border-radius:10px;
-  overflow:hidden;
+.title {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.bar{
-  height:100%;
-  background:#00c853; /* verde estilo moderno */
-  border-radius:10px;
+.program {
+  font-size: 13px;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; 
+  -webkit-box-orient: vertical;
+}
+
+.next {
+  font-size: 12px;
+  opacity: .7;
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.progress {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  margin-top: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: #00c853; 
+  border-radius: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="carousel"></div>
+<div class="widget-moderno">
+  <div class="hora" id="hora">00:00</div>
+  <div class="data-clima">
+    <span id="data">Carregando data...</span>
+    <div class="clima-grupo">
+      <img id="icone" src="" style="display: none;">
+      <span id="temp">--°C</span>
+    </div>
+  </div>
+</div>
+
+<div class="carousel-container">
+  <div class="carousel-wrapper">
+    <div id="carousel" class="carousel-grid"></div>
+  </div>
+</div>
 
 <script>
 // ===== FONTES DE EPG =====
 const EPG_URLS = [
-  "epg.xml"
+  "epg.xml",
+  "https://epg.pw/xmltv/epg_BR.xml",
+  "https://epgshare01.online/epgshare01/epg_ripper_BR1.xml"
 ];
 
-// IDs ATUALIZADOS: Contém os códigos antigos e os novos do epg.pw para garantir que funcione em ambos
+// LISTA DE CANAIS
 const canais = [
   {num:"01.1", nome:"JOVEM PAN", id:["Jovem.Pan.News.br","JovemPan.br","JovemPanNews.br","417187"], logo:"https://upload.wikimedia.org/wikipedia/commons/4/41/Logotipo_da_TV_Jovem_Pan_News.png"},
   {num:"01.3", nome:"H&H HD", id:["Sao.Paulo/SP..Discovery.Home.and.Health.br","São.Paulo/SP..Discovery.Home.and.Health.HD.br","DiscoveryHomeHealth.br","523310"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/90/Discovery_H%26H_Logo_2022.webp"},
   {num:"01.4", nome:"TLC HD", id:["Sao.Paulo/SP..TLC.br","Sao.Paulo/SP..TLC.HD.br","TLCDiscovery.br","523307","548890"], logo:"https://upload.wikimedia.org/wikipedia/commons/7/74/TLC_Logo.svg"},
   {num:"01.5", nome:"ARTE 1", id:["Sao.Paulo/SP..Arte.1.br","São.Paulo/SP..Arte.1.HD.br","Arte1.br","523338"], logo:"https://upload.wikimedia.org/wikipedia/commons/3/31/Arte_1_logo.svg"},
   {num:"01.6", nome:"BAND NEWS", id:["Sao.Paulo/SP..Band.News.br","São.Paulo/SP..Band.News.HD.br","BandNews.br","523314","548633"], logo:"https://upload.wikimedia.org/wikipedia/commons/c/ce/BandNewsTV2024.svg"},
-
   {num:"02.1", nome:"TV CAMARA", id:["Sao.Paulo/SP..TV.Camara.br","TVCamara.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/8/8e/Marca_TV_C%C3%A2mara_-_2018.png"},
   {num:"02.2", nome:"TV SENADO", id:["Sao.Paulo/SP..TV.Senado.br","TVSenado.br","523335"], logo:"https://upload.wikimedia.org/wikipedia/commons/3/3f/TV_Senado_logo_%281996%E2%80%932016%29.png"},
   {num:"02.4", nome:"TV ESCOLA", id:["Sao.Paulo/SP..TV.Escola.br","TVEscola.br","523295"], logo:"https://upload.wikimedia.org/wikipedia/commons/b/b5/TV_Escola.png"},
   {num:"02.5", nome:"CANAL SAUDE", id:["Sao.Paulo/SP..Canal.Saude.br","CanalSaude.br"], logo:"https://acervo.canalsaude.fiocruz.br/tools/images/logo-topMaior.jpg"},
   {num:"02.6", nome:"BAND", id:["Sao.Paulo/SP..Band.br","São.Paulo/SP..Band.HD.br","Band.br","523315"], logo:"https://upload.wikimedia.org/wikipedia/commons/2/2b/Rede_Bandeirantes_logo_2018.svg"},
-
   {num:"03.1", nome:"RECORD NEWS", id:["Sao.Paulo/SP..Record.News.br","São.Paulo/SP..Record.News..br","RecordNews.br","417184","523352"], logo:"https://upload.wikimedia.org/wikipedia/commons/4/46/Record_News_logo_2023.svg"},
   {num:"03.2", nome:"CNN BRASIL", id:["Sao.Paulo/SP..CNN.Brasil.br","São.Paulo/SP..CNN.Brasil.HD.br","CNNBrasil.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/8/8b/CNN_Brasil_%28red_background%29.svg"},
   {num:"03.3", nome:"CNN INTERNACIONAL", id:["São.Paulo/SP..CNN.International.br","CNNInternational.br","523278"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/9d/CNN_Logo_%282014%29.svg"},
   {num:"03.4", nome:"CNN ESPANHOL", id:["Sao.Paulo/SP..CNN.International.br","CNNenEspanol.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/b/b6/Logo_de_CNN_en_Espa%C3%B1ol_%282010-2015%29.svg"},
   {num:"03.5", nome:"BAND SPORTS HD", id:["Sao.Paulo/SP..Band.Sports.br","São.Paulo/SP..Band.Sports.HD.³.br","BandSports.br","426069","426138","523330"], logo:"https://upload.wikimedia.org/wikipedia/commons/8/8e/BandSports2024.png"},
   {num:"03.6", nome:"FISH TV", id:["Sao.Paulo/SP..FISH.TV.br","São.Paulo/SP..FISH.TV.HD.br","FishTV.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/92/Fish_TV_logo_2022.svg"},
-
   {num:"04.1", nome:"BAND MAIS", id:["Sao.Paulo/SP..Band.br","São.Paulo/SP..Band.HD.br","Band.br","523315"], logo:"https://upload.wikimedia.org/wikipedia/commons/2/2b/Rede_Bandeirantes_logo_2018.svg"},
   {num:"06.1", nome:"EPTV", id:["Sao.Paulo/SP..Globo.br","São.Paulo/SP..Globo.HD.br","Globo.br","EPTV.br","523353"], logo:"https://upload.wikimedia.org/wikipedia/pt/6/67/EPTV.png"},
   {num:"07.1", nome:"RBI", id:["RBI.br"], logo:"https://upload.wikimedia.org/wikipedia/pt/e/e3/RBI_TV_Logo.png"},
-
   {num:"08.1", nome:"ESPN", id:["ESPN.br","ESPN1.br","418725"], logo:"https://upload.wikimedia.org/wikipedia/commons/2/2f/ESPN_wordmark.svg"},
   {num:"08.2", nome:"ESPN 2", id:["ESPN.2.br","ESPN2.br","418722"], logo:"https://upload.wikimedia.org/wikipedia/commons/b/bf/ESPN2_logo.svg"},
   {num:"08.3", nome:"ESPN 3", id:["Sao.Paulo/SP..ESPN.3.br","ESPN3.br","417186","523329"], logo:"https://upload.wikimedia.org/wikipedia/commons/5/51/ESPN3_Logo.png"},
   {num:"08.4", nome:"ESPN 4", id:["Sao.Paulo/SP..ESPN.4.br","São.Paulo/SP..ESPN.4.HD.br","ESPN4.br","425978","426014","523357"], logo:"https://upload.wikimedia.org/wikipedia/commons/f/f1/ESPN_International_logo.svg"},
   {num:"08.5", nome:"ESPN 5", id:["ESPN.5.br","ESPN5.br","418724"], logo:"https://upload.wikimedia.org/wikipedia/commons/2/2f/ESPN_wordmark.svg"},
   {num:"08.6", nome:"ESPN EXTRA", id:["ESPN.6.br","ESPNExtra.br","417391"], logo:"https://upload.wikimedia.org/wikipedia/commons/2/2f/ESPN_wordmark.svg"},
-
   {num:"09.1", nome:"CARTOON NETWORK", id:["Sao.Paulo/SP..Cartoon.Network.br","São.Paulo/SP..Cartoon.Network.HD.br","CartoonNetwork.br","426094","523325","548619"], logo:"https://upload.wikimedia.org/wikipedia/commons/8/80/Cartoon_Network_2010_logo.svg"},
   {num:"09.2", nome:"CARTOONITO", id:["Sao.Paulo/SP..Cartoonito.br","São.Paulo/SP..Cartoonito.HD.br","São.Paulo/SP..cartoonito.br","Cartoonito.br","426194"], logo:"https://upload.wikimedia.org/wikipedia/commons/a/a5/Cartoonito_-_Logo_2021.svg"},
   {num:"09.3", nome:"TOONCAST", id:["Sao.Paulo/SP..Tooncast.br","Tooncast.br","523281"], logo:"https://upload.wikimedia.org/wikipedia/commons/c/c8/Tooncast_logo_%282%29.svg"},
   {num:"09.4", nome:"RATIMBUM", id:["Sao.Paulo/SP..TV.Ra.Tim.Bum.br","São.Paulo/SP..TV.Rá.Tim.Bum.HD.³.br","TVRaTimBum.br","426130","548613"], logo:"https://upload.wikimedia.org/wikipedia/pt/0/05/R%C3%A1-Tim-Bum.jpg"},
   {num:"09.5", nome:"DISCOVERY KIDS", id:["Sao.Paulo/SP..Discovery.Kids.br","São.Paulo/SP..Discovery.Kids.HD.³.br","DiscoveryKids.br","426105","426202","523318"], logo:"https://upload.wikimedia.org/wikipedia/commons/7/7f/Discovery_Kids_2021_2D_sin_wordmark.svg"},
   {num:"09.6", nome:"REDE TV", id:["Sao.Paulo/SP..Rede.TV.br","São.Paulo/SP..Rede.TV.HD.br","RedeTV.br","523301"], logo:"https://upload.wikimedia.org/wikipedia/commons/1/11/RedeTV%21_2019_logo.png"},
-
   {num:"13.1", nome:"RECORD INTERIOR", id:["Sao.Paulo/SP..Record.br","São.Paulo/SP..Record.HD.br","Record.br","523282"], logo:"https://upload.wikimedia.org/wikipedia/pt/0/0e/Logotipo_da_Record_%28rede_de_televis%C3%A3o%29.png"},
-
   {num:"30.1", nome:"CULTURA", id:["Sao.Paulo/SP..Cultura.br","São.Paulo/SP..Cultura.HD.br","TVCultura.br","523305"], logo:"https://upload.wikimedia.org/wikipedia/commons/8/82/Cultura_logo_2013.svg"},
   {num:"30.2", nome:"UNIVESP", id:["Sao.Paulo/SP..Canal.Universitario.br","UnivespTV.br"], logo:"https://upload.wikimedia.org/wikipedia/pt/6/6c/Logotipo_da_Univesp_TV.jpg"},
   {num:"30.3", nome:"REDE ALESP", id:["Sao.Paulo/SP..Canal.Universitario.br","TVAlesp.br"], logo:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqjGQDZ8FxwJ1IQEVW-WkZAhEuhfrXvJxdLg&s"},
   {num:"30.4", nome:"TV CAMARA SP", id:["Sao.Paulo/SP..TV.Camarasp.br","TVCamaraSaoPaulo.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/3/3d/TV_C%C3%A2mara_logo_2018.png"},
-
   {num:"32.1", nome:"REDE VIDA", id:["Sao.Paulo/SP..Rede.Vida.br","São.Paulo/SP..Rede.Vida.HD.br","RedeVida.br","523337"], logo:"https://upload.wikimedia.org/wikipedia/commons/0/0c/Rede_Vida_logo.png"},
   {num:"32.2", nome:"REDE VIDA +", id:["Sao.Paulo/SP..Rede.Vidamais.br","RedeVida2.br"], logo:"https://static.wixstatic.com/media/8c1b32_b5e5604aa8884e71812e6c99c10e6620~mv2.png/v1/fill/w_1920,h_1080,al_c/8c1b32_b5e5604aa8884e71812e6c99c10e6620~mv2.png"},
   {num:"32.3", nome:"REDE VIDA EDUCAÇÃO", id:["Sao.Paulo/SP..Rede.Vida.edu.br","RedeVida3.br"], logo:"https://static.wixstatic.com/media/fa5edd_a0790ed730384d7ab43672ef4dffd471~mv2.jpg/v1/fill/w_1920,h_1080,al_c/fa5edd_a0790ed730384d7ab43672ef4dffd471~mv2.jpg"},
-
   {num:"34.1", nome:"DISCOVERY ID", id:["Sao.Paulo/SP..ID.br","São.Paulo/SP..ID.HD.³.br","InvestigationDiscovery.br","548686"], logo:"https://upload.wikimedia.org/wikipedia/commons/3/35/InvestigationDiscoveryLogo2020.svg"},
   {num:"34.2", nome:"DISCOVERY", id:["Sao.Paulo/SP..Discovery.Channel.br","São.Paulo/SP..Discovery.HD.³.br","DiscoveryChannel.br","426157","523309"], logo:"https://upload.wikimedia.org/wikipedia/commons/f/f1/2019_Discovery_logo.svg"},
   {num:"34.3", nome:"DISCOVERY TURBO", id:["Sao.Paulo/SP..Discovery.Turbo.br","São.Paulo/SP..Discovery.Turbo.HD.³.br","DiscoveryTurbo.br","426010","426133","523326"], logo:"https://upload.wikimedia.org/wikipedia/commons/e/ec/Discovery_Turbo_logo.svg"},
   {num:"34.4", nome:"DISCOVERY SCIENCE", id:["Sao.Paulo/SP..Discovery.Science.br","São.Paulo/SP..Discovery.Science.HD.³.br","DiscoveryScience.br","426066","426179","523359"], logo:"https://upload.wikimedia.org/wikipedia/commons/d/dd/Science_Channel_logo.svg"},
   {num:"34.5", nome:"DISCOVERY THEATER HD", id:["São.Paulo/SP..Discovery.Theater.HD.³.br","DiscoveryTheater.br","426106"], logo:"https://upload.wikimedia.org/wikipedia/commons/7/7e/2015_Discovery_theater_HD_logo.svg"},
   {num:"34.6", nome:"DISCOVERY WORLD HD", id:["São.Paulo/SP..Discovery.world.HD.³.br","DiscoveryWorld.br","426164","523272"], logo:"https://upload.wikimedia.org/wikipedia/commons/8/85/World_Discovery_HD_logo.svg"},
-
   {num:"35.1", nome:"WOOHOO", id:["Sao.Paulo/SP..Woohoo.br","São.Paulo/SP..Woohoo.HD.br","Woohoo.br","523273","548573"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/95/WOOHOO.png"},
   {num:"35.2", nome:"WARNER", id:["Sao.Paulo/SP..Warner.Channel.br","São.Paulo/SP..Warner.Channel.HD.br","WarnerChannel.br","523350"], logo:"https://upload.wikimedia.org/wikipedia/commons/b/b0/Warner_Channel_2026.svg"},
   {num:"35.3", nome:"SONY", id:["Sao.Paulo/SP..Sony.br","São.Paulo/SP..Sony.HD.³.br","SonyChannel.br","523333"], logo:"https://upload.wikimedia.org/wikipedia/commons/e/ee/Sony_Channel_LA_2023.png"},
   {num:"35.4", nome:"SONY MOVIES", id:["Sony.Movies.Brazil.br","SonyMovies.br","417588"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/9b/Sony_Movies_Logo.svg"},
   {num:"35.5", nome:"SPACE", id:["Sao.Paulo/SP..Space.br","São.Paulo/SP..Space.HD.³.br","Space.br","425968","426009","523347"], logo:"https://upload.wikimedia.org/wikipedia/commons/1/1a/SpaceLogo.svg"},
   {num:"35.5", nome:"CINE BRASIL", id:["Sao.Paulo/SP..Cine.Brasil","CineBrasilTV.br"], logo:"https://www.cinebrasil.tv/images/semFoto.png"},
-
   {num:"38.1", nome:"TV APARECIDA", id:["Sao.Paulo/SP..TV.Aparecida.br","Belo.Horizonte/MG...TV.Aparecida.(espelho).br","TVAparecida.br","523345"], logo:"https://upload.wikimedia.org/wikipedia/pt/1/1e/Logotipo_da_TV_Aparecida.png"},
   {num:"39.1", nome:"SBT", id:["Sao.Paulo/SP..SBT.br","São.Paulo/SP..SBT.HD.br","SBT.br","523298"], logo:"https://upload.wikimedia.org/wikipedia/pt/4/41/Logotipo_do_SBT.svg"},
-
   {num:"41.1", nome:"MAIS FAMILIA", id:["Sao.Paulo/SP..MAIS.FAMILIA.br","RedeMaisFamilia.br"], logo:"https://upload.wikimedia.org/wikipedia/pt/3/31/Logo-rede-mais-familia.png"},
   {num:"41.2", nome:"BOAS NOVAS", id:["Sao.Paulo/SP..BoasNovas.br","BoasNovas.br"], logo:"https://upload.wikimedia.org/wikipedia/pt/3/39/Rede_Boas_Novas.png"},
-
   {num:"45.1", nome:"CANAL DO BOI", id:["Campinas/SP..Canal.do.Boi.br","CanalDoBoi.br","523289"], logo:"https://upload.wikimedia.org/wikipedia/commons/c/c3/Logo_Canal_do_Boi_-_PNG.png"},
   {num:"45.2", nome:"AGRO CANAL HD", id:["São.Paulo/SP..Agro.Mais.HD..br","AgroCanal.br","AgroMais.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/b/b7/AGRO_CANAL_-_LOGO.jpg"},
   {num:"45.3", nome:"CANAL RURAL", id:["São.Paulo/SP..Canal.Rural.br","CanalRural.br","523340"], logo:"https://upload.wikimedia.org/wikipedia/pt/3/38/Canalrural.png"},
   {num:"45.4", nome:"TERRA VIVA", id:["São.Paulo/SP..Terra.Viva.br","TerraViva.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/5/5b/Terra_Viva_logo.svg"},
   {num:"45.6", nome:"TCM", id:["São.Paulo/SP..TCM.br","TCM.br","426036","523316"], logo:"https://upload.wikimedia.org/wikipedia/commons/c/c7/TCM_Latam_logo.png"},
-
   {num:"51.1", nome:"ANIMAL PLANET", id:["Sao.Paulo/SP..Animal.Planet.br","São.Paulo/SP..Animal.Planet.HD.br","AnimalPlanet.br","425989","426119","523297"], logo:"https://upload.wikimedia.org/wikipedia/commons/2/20/2018_Animal_Planet_logo.svg"},
   {num:"51.2", nome:"HISTORY", id:["Sao.Paulo/SP..History.HD.br","São.Paulo/SP..The.History.Channel.br","History.br","426085","426149","523342"], logo:"https://upload.wikimedia.org/wikipedia/commons/0/01/History_%282021%29.svg"},
   {num:"51.3", nome:"HISTORY 2", id:["São.Paulo/SP..History.2.HD.br","History2.br","417188"], logo:"https://upload.wikimedia.org/wikipedia/commons/c/c9/History2_logo_%282022%29.svg"},
   {num:"51.4", nome:"HGTV", id:["São.Paulo/SP..HGTV.HD.br","São.Paulo/SP..HGTV.br","HGTV.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/c/c5/HGTV_US_Logo_2015.svg"},  
   {num:"51.5", nome:"AXN", id:["Sao.Paulo/SP..AXN.br","São.Paulo/SP..AXN.HD.³.br","AXN.br","523313"], logo:"https://upload.wikimedia.org/wikipedia/commons/5/52/AXN_logo_%282015%29.svg"},
   {num:"51.6", nome:"A&E", id:["Sao.Paulo/SP..A.and.E.br","São.Paulo/SP..A.and.E.HD.br","AE.br","523311"], logo:"https://upload.wikimedia.org/wikipedia/commons/d/df/A%26E_Network_logo.svg"},
-
   {num:"55.1", nome:"TNT", id:["Sao.Paulo/SP..TNT.br","São.Paulo/SP..TNT.HD.³.br","TNT.br","426084","426148","523279"], logo:"https://upload.wikimedia.org/wikipedia/commons/2/24/TNT_Logo_2016.svg"},
   {num:"55.2", nome:"TNT SERIES", id:["Sao.Paulo/SP..TNT.Series.br","TNTSeries.br","523294"], logo:"https://upload.wikimedia.org/wikipedia/commons/7/75/TNT_Series_Logo_2016.png"},
   {num:"55.3", nome:"LIFETIME", id:["Sao.Paulo/SP..Lifetime.br","São.Paulo/SP..Lifetime.HD.br","Lifetime.br","523356"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_Lifetime_2020.svg"},
   {num:"55.4", nome:"FASHION TV", id:["São.Paulo/SP..Fashion.TV.HD.br","FashionTV.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/7/7a/Fashion_TV_logo.svg"},
   {num:"55.5", nome:"MUSIC BOX HD", id:["São.Paulo/SP..Music.Box.Brazil.br","São.Paulo/SP..Music.Box.Brazil.HD.³.br","MusicBoxBrazil.br","426136","426177"], logo:"https://upload.wikimedia.org/wikipedia/commons/b/b4/LogoMusicRoxo.png"},
   {num:"55.6", nome:"TNT NOVELA", id:["São.Paulo/SP..Tnt.novelas.br","São.Paulo/SP..Tnt.novelas.HD.br","TNTNovelas.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/3/3a/Logo_TNT_Novelas.png"},
-
   {num:"68.1", nome:"TRAVEL BOX", id:["São.Paulo/SP..Travel.Box.Brasil.HD..br","TravelBoxBrazil.br","523331"], logo:"https://upload.wikimedia.org/wikipedia/commons/7/7e/TravelBoxBrazillogoatualizado.png"},
   {num:"68.2", nome:"CHEF TV", id:["Sao.Paulo/SP..Chef.tv.br","ChefTV.br"], logo:"https://cheftv.com.br/wp-content/uploads/2025/11/logo-cheftv.png"},
   {num:"68.3", nome:"CINEMAX", id:["Sao.Paulo/SP..Cinemax.br","Cinemax.br","425959","426059","523277"], logo:"https://upload.wikimedia.org/wikipedia/commons/6/66/Cinemax_2016.svg"},
   {num:"68.4", nome:"SABOR E ARTE", id:["Sabor.&.Arte.br","SaboreArte.br","417387"], logo:"https://upload.wikimedia.org/wikipedia/pt/9/98/Saborearte.png"},
   {num:"68.5", nome:"TOP FILM", id:["Sao.Paulo/SP..TopFilm.br"], logo:"https://cdn-icons-png.flaticon.com/512/5988/5988394.png"},
   {num:"68.6", nome:"ADULT SWIM", id:["Adult.Swim.HD.br","AdultSwim.br","417185"], logo:"https://upload.wikimedia.org/wikipedia/commons/e/e4/Adult_Swim_2003_logo.svg"},
-
   {num:"69.2", nome:"TV LEME", id:["Sao.Paulo/SP..TVLEME.br"], logo:"https://play-lh.googleusercontent.com/lZew_kFAy5WM3M5tmbJE8p1f1UQUaYpHML2angwnyCrlDPusa1oxKKiACBI89H2wnCjx"},
   {num:"69.3", nome:"AMC", id:["Sao.Paulo/SP..AMC.br","AMC.br","426040","426132","523312"], logo:"https://upload.wikimedia.org/wikipedia/commons/3/34/AMC_logo_2019.svg"},
   {num:"69.4", nome:"PRIME BOX", id:["Sao.Paulo/SP..Prime.Box.Brazil.br","PrimeBoxBrazil.br","426141","426151"], logo:"https://upload.wikimedia.org/wikipedia/commons/1/16/PrimeBoxBrazil2019.png"},
   {num:"69.5", nome:"CAZE TV", id:["Caze.tv","CazeTV.br"], logo:"https://upload.wikimedia.org/wikipedia/pt/2/22/Logotipo_da_Caz%C3%A9TV.png"}
 ];
-  
-/* ===== RELÓGIO ===== */
-function atualizarRelogio(){
+
+let cacheProgramas = []; 
+let paginaAtual = 0;
+const itensPorPagina = 6; 
+
+/* ===== RELÓGIO E DATA (WIDGET SUPERIOR) ===== */
+function atualizarWidgetHorario() {
   const agora = new Date();
-  const horaBR = agora.toLocaleTimeString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
-  });
-}
-setInterval(atualizarRelogio, 1000);
-atualizarRelogio();
-
-/* ===== TRATAMENTO DE DATAS XMLTV (CORRIGIDO) ===== */
-function parseDate(t){
-  if(!t) return 0;
-  const limpo = t.split(" ")[0]; 
-  const utc = Date.UTC(
-    parseInt(limpo.substring(0,4), 10),
-    parseInt(limpo.substring(4,6), 10) - 1,
-    parseInt(limpo.substring(6,8), 10),
-    parseInt(limpo.substring(8,10), 10),
-    parseInt(limpo.substring(10,12), 10)
-  );
   
-  // Tratamento preciso para links externos que enviam fuso UTC zerado
-  if(t.includes("+0000")) {
-    return utc; 
+  // Atualiza Hora
+  const hElement = document.getElementById("hora");
+  if(hElement) {
+    hElement.innerText = agora.toLocaleTimeString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
   }
-  // Fallback seguro de 3 horas para arquivos gerados localmente sem fuso definido
-  return utc - (3 * 60 * 60 * 1000); 
+
+  // Atualiza Data (Ex: Sábado, 13 de Junho)
+  const dElement = document.getElementById("data");
+  if(dElement) {
+    const opcoes = { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Sao_Paulo' };
+    dElement.innerText = agora.toLocaleDateString("pt-BR", opcoes);
+  }
+}
+setInterval(atualizarWidgetHorario, 1000);
+atualizarWidgetHorario();
+
+/* ===== MOTOR DE CLIMA AUTOMÁTICO (FREE) ===== */
+function obterClima() {
+  // Coordenadas padrão de Leme / São Paulo
+  const lat = -22.18;
+  const lon = -47.38;
+  const urlClima = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+
+  fetch(urlClima)
+    .then(r => r.json())
+    .then(dados => {
+      if(dados && dados.current_weather) {
+        const temp = Math.round(dados.current_weather.temperature);
+        const code = dados.current_weather.weathercode;
+        
+        document.getElementById("temp").innerText = `${temp}°C`;
+        
+        // Mapeamento básico de ícones climáticos nativos baseados em códigos mundiais
+        let imgUrl = "https://cdn-icons-png.flaticon.com/512/869/869869.png"; // Sol padrao
+        if(code >= 1 && code <= 3) imgUrl = "https://cdn-icons-png.flaticon.com/512/1163/1163736.png"; // Nublado
+        if(code >= 51 && code <= 67) imgUrl = "https://cdn-icons-png.flaticon.com/512/3351/3351979.png"; // Chuva
+        if(code >= 80) imgUrl = "https://cdn-icons-png.flaticon.com/512/1779/1779927.png"; // Tempestade
+        
+        const imgEl = document.getElementById("icone");
+        imgEl.src = imgUrl;
+        imgEl.style.display = "block";
+      }
+    })
+    .catch(() => console.log("Falha ao obter clima. Reconectando em breve."));
+}
+obterClima();
+setInterval(obterClima, 900000); // Atualiza o clima a cada 15 minutos
+
+/* ===== PARSER MATEMÁTICO BLINDADO CONTRA ESPAÇOS ===== */
+function parseDate(t) {
+  if (!t) return 0;
+  
+  const limpoStr = t.replace(/\s+/g, ' ').trim();
+  const partes = limpoStr.split(' ');
+  const limpo = partes[0];
+  let fusoOriginal = partes[1] || "+0000";
+
+  if (limpo.length < 12) return 0;
+
+  const ano = parseInt(limpo.substring(0, 4), 10);
+  const mes = parseInt(limpo.substring(4, 6), 10) - 1;
+  const dia = parseInt(limpo.substring(6, 8), 10);
+  const hora = parseInt(limpo.substring(8, 10), 10);
+  const min = parseInt(limpo.substring(10, 12), 10);
+  const seg = limpo.length >= 14 ? parseInt(limpo.substring(12, 14), 10) : 0;
+
+  let utcMs = Date.UTC(ano, mes, dia, hora, min, seg);
+
+  if(fusoOriginal.toLowerCase() === "ut" || fusoOriginal.toLowerCase() === "utc" || fusoOriginal.toLowerCase() === "gmt") {
+    fusoOriginal = "+0000";
+  }
+  
+  const sinal = fusoOriginal.charAt(0) === '-' ? -1 : 1;
+  let fusoHoras = parseInt(fusoOriginal.substring(1, 3), 10);
+  let fusoMinutos = parseInt(fusoOriginal.substring(3, 5), 10);
+  
+  if (isNaN(fusoHoras)) fusoHoras = 0;
+  if (isNaN(fusoMinutos)) fusoMinutos = 0;
+
+  const offsetMs = ((fusoHoras * 60) + fusoMinutos) * 60 * 1000;
+  return utcMs - (sinal * offsetMs);
 }
 
-function calc(startMs, stopMs){
+function calc(start, stop){
   const now = Date.now();
-  if(!startMs || !stopMs || (stopMs - startMs) <= 0) return 0;
-  return Math.max(0, Math.min(100, ((now - startMs) / (stopMs - startMs)) * 100));
+  if(!start || !stop || (stop - start) <= 0) return 0;
+  return Math.max(0, Math.min(100, ((now - start) / (stop - start)) * 100));
 }
 
 function hora(timestamp){
   if(!timestamp) return "--:--";
   const d = new Date(timestamp);
-  return d.getHours().toString().padStart(2,"0") + ":" +
-         d.getMinutes().toString().padStart(2,"0");
+  return d.toLocaleTimeString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
-/* RENDER */
-function carregarEPG(programasAgrupados){
+/* ===== RENDERIZADOR ROBUSTO COM FILTRO CRONOLÓGICO ===== */
+function renderizarSlide() {
   const box = document.getElementById("carousel");
+  if (!box) return;
+  
+  box.innerHTML = "";
   const now = Date.now();
+
+  const inicioIndex = paginaAtual * itensPorPagina;
+  const fimIndex = inicioIndex + itensPorPagina;
+  const canaisDaPagina = canais.slice(inicioIndex, fimIndex);
+
   let htmlFinal = "";
 
-  canais.forEach(c => {
+  canaisDaPagina.forEach(c => {
     const listaIds = Array.isArray(c.id) ? c.id : [c.id];
 
-    let atual = programasAgrupados.find(p =>
-      listaIds.includes(p.channel) &&
-      p.start <= now &&
-      p.stop >= now
-    );
+    let programasDoCanal = cacheProgramas.filter(p => listaIds.includes(p.channel))
+                                         .sort((a, b) => a.start - b.start);
 
-    let proximos = programasAgrupados.filter(p =>
-      listaIds.includes(p.channel) &&
-      p.start > now
-    ).sort((a, b) => a.start - b.start);
+    let atual = programasDoCanal.find(p => p.start <= now && p.stop > now);
+    let pontoDeCorte = atual ? atual.stop : now;
+    let prox = programasDoCanal.find(p => p.start >= pontoDeCorte);
 
-    let prox = proximos[0];
-
-    let titulo = atual?.title || "Sem programação";
+    let titulo = atual?.title || "Sem programação comercial";
     let inicio = atual ? hora(atual.start) : "--:--";
     let fim = atual ? hora(atual.stop) : "--:--";
 
@@ -276,17 +438,21 @@ function carregarEPG(programasAgrupados){
 
     htmlFinal += `
       <div class="channel">
-        <img class="logo" src="${c.logo}" onerror="this.style.display='none'">
-        <div class="title">${c.num} - ${c.nome}</div>
-        <div class="program">
-          <b>${inicio} - ${fim}</b><br>
-          ${titulo}
+        <div class="logo-container">
+          <img class="logo" src="${c.logo}" onerror="this.style.display='none'">
         </div>
-        <div class="progress">
-          <div class="bar" style="width:${prog}%"></div>
-        </div>
-        <div class="next">
-          ➡ ${proxHora} - ${proxTitulo}
+        <div class="channel-info">
+          <div class="title">${c.num} - ${c.nome}</div>
+          <div class="program">
+            <b>${inicio} - ${fim}</b><br>
+            ${titulo}
+          </div>
+          <div class="progress">
+            <div class="bar" style="width:${prog}%"></div>
+          </div>
+          <div class="next">
+            ➡ ${proxHora} - ${proxTitulo}
+          </div>
         </div>
       </div>
     `;
@@ -295,7 +461,7 @@ function carregarEPG(programasAgrupados){
   box.innerHTML = htmlFinal;
 }
 
-/* FILTRAGEM EFICIENTE (CORRIGIDA) */
+/* ===== FILTRAGEM, DOWNLOAD E ZERAGEM DE CACHE COLETIVO ===== */
 function atualizar(){
   const agora = Date.now();
   const todosOsIdsValidos = canais.flatMap(c => c.id);
@@ -315,7 +481,6 @@ function atualizar(){
             const startMs = parseDate(p.getAttribute("start"));
             const stopMs = parseDate(p.getAttribute("stop"));
 
-            // BLOQUEIO TOTAL: O programa precisa obrigatoriamente terminar no futuro
             if (stopMs > agora) {
               extraidos.push({
                 channel: chId,
@@ -335,25 +500,22 @@ function atualizar(){
   );
 
   Promise.all(requisicoes).then(resultados => {
-    const todosOsProgramas = resultados.flat();
-    carregarEPG(todosOsProgramas);
+    cacheProgramas = resultados.flat();
+    renderizarSlide(); 
   });
 }
 
+// Inicializações
 atualizar();
-setInterval(atualizar, 60000);
+setInterval(atualizar, 60000); 
 
-/* CARROSSEL LOOP */
-let index = 0;
+/* ===== TROCA AUTOMÁTICA DE PÁGINA (15 Segundos) ===== */
 setInterval(() => {
-  const box = document.getElementById("carousel");
-  if (!box || canais.length === 0) return;
-
-  index++;
-  if(index >= canais.length) index = 0;
-  
-  box.style.transform = `translateX(-${index * 318}px)`;
-}, 4000);
+  const totalPaginas = Math.ceil(canais.length / itensPorPagina);
+  paginaAtual++;
+  if (paginaAtual >= totalPaginas) paginaAtual = 0; 
+  renderizarSlide();
+}, 15000);
 </script>
 
 </body>
