@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>GUIA TV</title>
+<title>GUIA TV + OVERLAY</title>
 
 <style>
 html, body {
@@ -12,26 +12,66 @@ html, body {
   padding: 0;
   overflow: hidden;
   background: transparent; 
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Arial, sans-serif;
   color: #fff;
 }
 
-/* RELÓGIO DE DIAGNÓSTICO (Para você checar se a data da TV está certa) */
-.diagnostico-painel {
+/* ==========================================
+   WIDGET DE DATA, HORA E CLIMA (MODERNO)
+   ========================================== */
+.widget-moderno {
   position: fixed;
-  top: 20px;
-  left: 40px;
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid #00c853;
-  padding: 10px 15px;
-  border-radius: 8px;
-  font-size: 14px;
+  top: 30px;
+  right: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; 
+  gap: 4px;
+  padding: 15px 25px;
+  background: rgba(15, 15, 15, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   z-index: 10000;
-  color: #00c853;
-  font-family: monospace;
 }
 
-/* CONTAINER PRINCIPAL */
+.widget-moderno .hora {
+  font-size: 54px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(0,0,0,0.4);
+}
+
+.widget-moderno .data-clima {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 400;
+  opacity: 0.9;
+  text-transform: capitalize; 
+}
+
+.widget-moderno .clima-grupo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  padding-left: 12px;
+}
+
+.widget-moderno img {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
+}
+
+/* ==========================================
+   CAROUSEL E GUIA DE PROGRAMAÇÃO
+   ========================================== */
 .carousel-container {
   width: 100%;
   position: fixed;
@@ -44,14 +84,12 @@ html, body {
   z-index: 9999;
 }
 
-/* JANELA DE CORTE INTERNA */
 .carousel-wrapper {
   overflow: hidden;
   width: calc(100% - 80px); 
   margin: 0 auto;
 }
 
-/* GRID ESTRUTURADO */
 .carousel-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -60,23 +98,21 @@ html, body {
   width: 100%;
 }
 
-/* CARD CANAL */
 .channel {
   height: 140px;
   background: rgba(20, 20, 20, 0.8); 
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-radius: 16px;
   padding: 12px;
   border: 1px solid rgba(255,255,255,0.12);
   box-sizing: border-box;
-  
   display: flex;
   flex-direction: row; 
   align-items: center; 
   gap: 15px;               
 }
 
-/* CONTROLLER DA LOGO */
 .logo-container {
   width: 85px;
   height: 100%;
@@ -86,14 +122,12 @@ html, body {
   flex-shrink: 0; 
 }
 
-/* LOGO */
 .logo {
   max-width: 100%;
   max-height: 90px;
   object-fit: contain;
 }
 
-/* CONTEÚDO DE TEXTO */
 .channel-info {
   flex-grow: 1;
   display: flex;
@@ -102,7 +136,6 @@ html, body {
   min-width: 0; 
 }
 
-/* NOME CANAL */
 .title {
   font-size: 17px;
   font-weight: 600;
@@ -112,7 +145,6 @@ html, body {
   text-overflow: ellipsis;
 }
 
-/* PROGRAMA ATUAL */
 .program {
   font-size: 13px;
   line-height: 1.3;
@@ -122,7 +154,6 @@ html, body {
   -webkit-box-orient: vertical;
 }
 
-/* PROXIMO */
 .next {
   font-size: 12px;
   opacity: .7;
@@ -132,7 +163,6 @@ html, body {
   text-overflow: ellipsis;
 }
 
-/* BARRA PROGRESSO */
 .progress {
   height: 4px;
   background: rgba(255, 255, 255, 0.15);
@@ -151,7 +181,16 @@ html, body {
 
 <body>
 
-<div id="relogio-teste" class="diagnostico-painel">Data da TV: Carregando...</div>
+<div class="widget-moderno">
+  <div class="hora" id="hora">00:00</div>
+  <div class="data-clima">
+    <span id="data">Carregando data...</span>
+    <div class="clima-grupo">
+      <img id="icone" src="" style="display: none;">
+      <span id="temp">--°C</span>
+    </div>
+  </div>
+</div>
 
 <div class="carousel-container">
   <div class="carousel-wrapper">
@@ -160,14 +199,15 @@ html, body {
 </div>
 
 <script>
-// ===== FONTES DE EPG =====
-const EPG_URLS = [
-  "epg.xml",
-  "https://epg.pw/xmltv/epg_BR.xml",
-  "https://epgshare01.online/epgshare01/epg_ripper_BR1.xml"
-];
+// ============================================================================
+// AJUSTE FINO DE PROGRAMAÇÃO (Se necessário)
+// O fuso de São Paulo agora é automático. Use esta variável APENAS se quiser
+// adiantar ou atrasar os cards em minutos (Ex: 60 para adiantar 1 hora).
+const ADICIONAR_MINUTOS = 2040; 
+// ============================================================================
 
-// LISTA DE CANAIS
+const EPG_URLS = ["epg1.xml", "epg2.xml"];
+
 const canais = [
   {num:"01.1", nome:"JOVEM PAN", id:["Jovem.Pan.News.br","JovemPan.br","JovemPanNews.br","417187"], logo:"https://upload.wikimedia.org/wikipedia/commons/4/41/Logotipo_da_TV_Jovem_Pan_News.png"},
   {num:"01.3", nome:"H&H HD", id:["Sao.Paulo/SP..Discovery.Home.and.Health.br","São.Paulo/SP..Discovery.Home.and.Health.HD.br","DiscoveryHomeHealth.br","523310"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/90/Discovery_H%26H_Logo_2022.webp"},
@@ -257,46 +297,107 @@ let cacheProgramas = [];
 let paginaAtual = 0;
 const itensPorPagina = 6; 
 
-/* ===== ATUALIZADOR DO RELÓGIO DE TESTE ===== */
-function atualizarRelogioDiagnostico(){
-  const elemento = document.getElementById("relogio-teste");
-  if(!elemento) return;
-  
+/* ===== SINCRO RELÓGIO E DATA SÃO PAULO (NATIVO/MODERNO) ===== */
+function atualizarRelogio(){
   const agora = new Date();
-  // Mostra exatamente o dia, mês, ano e hora que a TV está processando
-  const textoData = agora.toLocaleDateString("pt-BR") + " às " + agora.toLocaleTimeString("pt-BR");
-  elemento.innerText = "Relógio do seu aparelho: " + textoData;
-}
-setInterval(atualizarRelogioDiagnostico, 1000);
+  
+  const strHora = agora.toLocaleTimeString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+  
+  const strData = agora.toLocaleDateString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit"
+  }).replace('.', ''); 
 
-/* ===== PARSER MATEMÁTICO EXTRA-BLINDADO ===== */
+  document.getElementById("hora").innerText = strHora;
+  document.getElementById("data").innerText = strData;
+}
+setInterval(atualizarRelogio, 1000);
+atualizarRelogio();
+
+/* ===== CLIMA DINÂMICO (LEME - SP) ===== */
+async function carregarClima() {
+  try {
+    const lat = -22.18;
+    const lon = -47.39;
+
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+    const data = await res.json();
+
+    const temp = Math.round(data.current_weather.temperature);
+    const code = data.current_weather.weathercode;
+
+    document.getElementById("temp").innerText = `${temp}°C`;
+
+    let icon = "01d";
+    if (code === 0) icon = "01d";
+    else if ([1,2,3].includes(code)) icon = "02d";
+    else if ([45,48].includes(code)) icon = "50d";
+    else if ([51,53,55,61,63,65].includes(code)) icon = "10d";
+    else if ([71,73,75].includes(code)) icon = "13d";
+    else if ([95,96,99].includes(code)) icon = "11d";
+
+    const imgIcone = document.getElementById("icone");
+    imgIcone.src = `https://openweathermap.org/img/wn/${icon}@2x.png`;
+    imgIcone.style.display = "block"; 
+
+  } catch (e) {
+    console.log("Erro clima:", e);
+  }
+}
+carregarClima();
+setInterval(carregarClima, 600000); 
+
+/* ===== NOVO PARSER NATIVO INTELIGENTE AUTOMÁTICO ===== */
 function parseDate(t) {
   if (!t) return 0;
+  
+  // Limpa a string da EPG tirando espaços duplos
+  const limpo = t.trim().replace(/\s+/g, ' ');
+  const partes = limpo.split(' ');
+  const dataString = partes[0]; // Ex: "20260612180000"
+  const offsetString = partes[1] || ""; // Ex: "+0000" ou "-0300"
 
-  const partes = t.trim().split(/\s+/);
-  const limpo = partes[0];
-  const fusoOriginal = partes[1] || "+0000";
+  if (dataString.length < 14) return 0;
 
-  if (limpo.length < 12) return 0;
+  // Extrai pedaço por pedaço
+  const ano = dataString.substring(0, 4);
+  const mes = dataString.substring(4, 6);
+  const dia = dataString.substring(6, 8);
+  const hora = dataString.substring(8, 10);
+  const min = dataString.substring(10, 12);
+  const seg = dataString.substring(12, 14);
 
-  const ano = parseInt(limpo.substring(0, 4), 10);
-  const mes = parseInt(limpo.substring(4, 6), 10) - 1;
-  const dia = parseInt(limpo.substring(6, 8), 10);
-  const hora = parseInt(limpo.substring(8, 10), 10);
-  const min = parseInt(limpo.substring(10, 12), 10);
-  const seg = limpo.length >= 14 ? parseInt(limpo.substring(12, 14), 10) : 0;
+  // Reconstrói no padrão internacional ISO 8601 estruturado
+  let isoStr = `${ano}-${mes}-${dia}T${hora}:${min}:${seg}`;
 
-  // Monta em milissegundos UTC puros baseados no texto lido
-  let utcMs = Date.UTC(ano, mes, dia, hora, min, seg);
+  // Se a EPG mandar fuso explícito, anexa na string (Ex: +00:00)
+  if (offsetString.length >= 5) {
+    const sinal = offsetString.charAt(0);
+    const fHoras = offsetString.substring(1, 3);
+    const fMins = offsetString.substring(3, 5);
+    isoStr += `${sinal}${fHoras}:${fMins}`;
+  } else {
+    // Se não vier fuso na EPG, assume que o arquivo está em UTC (fuso zero)
+    isoStr += "Z";
+  }
 
-  // Calcula o offset contido no XML
-  const sinal = fusoOriginal.charAt(0) === '-' ? -1 : 1;
-  const fusoHoras = parseInt(fusoOriginal.substring(1, 3), 10);
-  const fusoMinutos = parseInt(fusoOriginal.substring(3, 5), 10);
-  const offsetMs = ((fusoHoras * 60) + fusoMinutos) * 60 * 1000;
+  const parsedDate = new Date(isoStr);
+  let finalMs = parsedDate.getTime();
 
-  // Retorna o timestamp real do evento em UTC absoluto
-  return utcMs - (sinal * offsetMs);
+  if (isNaN(finalMs)) return 0;
+
+  // Se houver necessidade de ajuste fino forçado em minutos
+  if (ADICIONAR_MINUTOS !== 0) {
+    finalMs += (ADICIONAR_MINUTOS * 60 * 1000);
+  }
+
+  return finalMs;
 }
 
 function calc(start, stop){
@@ -305,17 +406,12 @@ function calc(start, stop){
   return Math.max(0, Math.min(100, ((now - start) / (stop - start)) * 100));
 }
 
-/* ===== EXIBIÇÃO DE HORA FORÇADA PARA SÃO PAULO ===== */
 function hora(timestamp){
   if(!timestamp) return "--:--";
+  // Exibe a hora do card respeitando estritamente o fuso do sistema local de SP
   const d = new Date(timestamp);
-  
-  // SOLUÇÃO CHAVE: Força o fuso brasileiro independente do fuso configurado no aparelho/TV
-  return d.toLocaleTimeString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
+  return d.getHours().toString().padStart(2,"0") + ":" +
+         d.getMinutes().toString().padStart(2,"0");
 }
 
 /* ===== RENDERIZADOR ===== */
@@ -348,7 +444,7 @@ function renderizarSlide() {
 
     let prox = proximos[0];
 
-    let titulo = atual?.title || "Sem programação comercial";
+    let titulo = atual?.title || "Sem programação";
     let inicio = atual ? hora(atual.start) : "--:--";
     let fim = atual ? hora(atual.stop) : "--:--";
 
@@ -382,14 +478,17 @@ function renderizarSlide() {
   box.innerHTML = htmlFinal;
 }
 
-/* ===== FILTRAGEM E DOWNLOAD DA EPG ===== */
+/* ===== DOWNLOAD DA EPG ===== */
 function atualizar(){
   const agora = Date.now();
   const todosOsIdsValidos = canais.flatMap(c => c.id);
 
   const requisicoes = EPG_URLS.map(url => 
-    fetch(url)
-      .then(r => r.text())
+    fetch(`${url}?_=${agora}`)
+      .then(r => {
+        if (!r.ok) throw new Error(`Erro HTTP: ${r.status}`);
+        return r.text();
+      })
       .then(str => new DOMParser().parseFromString(str, "text/xml"))
       .then(xml => {
         const elementos = Array.from(xml.querySelectorAll("programme"));
@@ -421,7 +520,10 @@ function atualizar(){
   );
 
   Promise.all(requisicoes).then(resultados => {
-    cacheProgramas = resultados.flat();
+    const novosProgramas = resultados.flat();
+    if (novosProgramas.length > 0) {
+      cacheProgramas = novosProgramas;
+    }
     renderizarSlide(); 
   });
 }
@@ -429,11 +531,11 @@ function atualizar(){
 atualizar();
 setInterval(atualizar, 60000); 
 
-/* ===== TROCA AUTOMÁTICA (15 Segundos) ===== */
+/* ===== ROTAÇÃO DO CAROUSEL ===== */
 setInterval(() => {
   const totalPaginas = Math.ceil(canais.length / itensPorPagina);
   paginaAtual++;
-  if (paginaAtual >= totalPaginas) paginaAtual = 0; 
+  if (paginaAtual >= totalPaginas) paginaAtual = 0;
   renderizarSlide();
 }, 15000); 
 </script>
