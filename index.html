@@ -93,28 +93,28 @@ html, body {
 .carousel-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 140px); 
+  grid-template-rows: repeat(2, 160px); /* Aumentado de 140px para 160px para acomodar as fontes maiores */
   gap: 18px; 
   width: 100%;
 }
 
 .channel {
-  height: 140px;
+  height: 160px; /* Aumentado de 140px para 160px */
   background: rgba(20, 20, 20, 0.8); 
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-radius: 16px;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid rgba(255,255,255,0.12);
   box-sizing: border-box;
   display: flex;
   flex-direction: row; 
   align-items: center; 
-  gap: 15px;               
+  gap: 18px;               
 }
 
 .logo-container {
-  width: 85px;
+  width: 95px; /* Levemente aumentado para equilibrar o visual */
   height: 100%;
   display: flex;
   align-items: center;
@@ -124,7 +124,7 @@ html, body {
 
 .logo {
   max-width: 100%;
-  max-height: 90px;
+  max-height: 100px;
   object-fit: contain;
 }
 
@@ -137,17 +137,18 @@ html, body {
 }
 
 .title {
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 21px; /* Aumentado de 17px para 21px */
+  font-weight: 700;
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #00c853; /* Destaque na cor para o número/nome do canal */
 }
 
 .program {
-  font-size: 13px;
-  line-height: 1.3;
+  font-size: 16px; /* Aumentado de 13px para 16px */
+  line-height: 1.4;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2; 
@@ -155,8 +156,8 @@ html, body {
 }
 
 .next {
-  font-size: 12px;
-  opacity: .7;
+  font-size: 14px; /* Aumentado de 12px para 14px */
+  opacity: .85;
   margin-top: 6px;
   white-space: nowrap;
   overflow: hidden;
@@ -171,7 +172,7 @@ html, body {
 }
 
 .progress {
-  height: 4px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.15);
   margin-top: 8px;
   border-radius: 10px;
@@ -208,26 +209,24 @@ html, body {
 <script>
 // ============================================================================
 // CONFIGURAÇÃO DE FONTES APONTANDO PARA O SEU GITHUB COM AJUSTE INDIVIDUAL
-// Substitua SEU_USUARIO e SEU_REPOSITORIO abaixo pelos seus dados reais.
 // ============================================================================
 const EPG_URLS = [
   {
-    idFonte: 3, // Identificador interno da fonte 3
+    idFonte: 3,
     url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg3.xml",
     ajusteHoras: 0
   },
   {
-    idFonte: 1, // Identificador interno da fonte 1
+    idFonte: 1,
     url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg1.xml",
     ajusteHoras: 0
   },
   {
-    idFonte: 2, // Identificador interno da fonte 2
+    idFonte: 2,
     url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg2.xml",
     ajusteHoras: 0
   }
 ];
-
 
 const canais = [
   {num:"01.1", nome:"JOVEM PAN", id:["jovempannews", "jovem_pan_news", "JovemPanNews.br", "Jovem.Pan.News.br", "417187"], logo:"https://upload.wikimedia.org/wikipedia/commons/4/41/Logotipo_da_TV_Jovem_Pan_News.png"},
@@ -452,7 +451,6 @@ function renderizarSlide() {
     let proxTitulo = prox?.title || "Sem info";
     let proxHora = prox ? hora(prox.start) : "--:--";
 
-    // Mapeamento dos símbolos baseados na fonte de onde o programa atual veio
     let simboloFonte = "";
     if (atual?.origem === 1) simboloFonte = ".";
     else if (atual?.origem === 2) simboloFonte = "..";
@@ -511,17 +509,18 @@ function atualizar(){
                 start: startMs,
                 stop: stopMs,
                 title: p.querySelector("title")?.textContent || "Sem título",
-                origem: fonte.idFonte // Adiciona o número da fonte no objeto do programa
+                origem: fonte.idFonte
               });
             }
           }
         });
         return extraidos;
-      })
-      .catch(err => {
-        console.warn(`Erro no link: ${fonte.url}`);
-        return [];
-      })
+      }
+    )
+    .catch(err => {
+      console.warn(`Erro no link: ${fonte.url}`);
+      return [];
+    })
   );
 
   Promise.all(requisicoes).then(resultados => {
@@ -530,7 +529,6 @@ function atualizar(){
   });
 }
 
-// Inicializações periódicas automáticas
 atualizar();
 setInterval(atualizar, 60000); 
 
