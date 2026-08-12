@@ -17,7 +17,7 @@ html, body {
 }
 
 /* ==========================================
-   WIDGET DE DATA, HORA E CLIMA (MODERNO)
+   WIDGET DE DATA, HORA E CLIMA
    ========================================== */
 .widget-moderno {
   position: fixed;
@@ -69,15 +69,6 @@ html, body {
   filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
 }
 
-.aviso-programacao {
-  text-align: center;
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 12px;
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
-
 /* ==========================================
    CAROUSEL E GUIA DE PROGRAMAÇÃO
    ========================================== */
@@ -88,7 +79,7 @@ html, body {
   left: 0;
   background: transparent !important; 
   backdrop-filter: none !important;    
-  padding: 20px 0;
+  padding: 20px 0 10px 0;
   box-sizing: border-box;
   z-index: 9999;
 }
@@ -173,12 +164,6 @@ html, body {
   text-overflow: ellipsis;
 }
 
-.fonte-indicador {
-  font-weight: bold;
-  color: #00c853;
-  margin-left: 4px;
-}
-
 .progress {
   height: 5px;
   background: rgba(255, 255, 255, 0.15);
@@ -193,6 +178,21 @@ html, body {
   border-radius: 10px;
 }
 
+.aviso-programacao {
+  text-align: center;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 14px;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.fonte-tag {
+  font-weight: 900;
+  color: #00c853;
+  margin-left: 4px;
+}
+
 /* ==========================================
    ESTILO PARA SLIDE DE NOTÍCIA REGIONAL
    ========================================== */
@@ -200,11 +200,11 @@ html, body {
   grid-column: span 3;
   grid-row: span 2;
   height: 338px;
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(15, 23, 42, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-radius: 20px;
-  border: 1px solid rgba(0, 200, 83, 0.5);
+  border: 1px solid rgba(0, 200, 83, 0.6);
   padding: 30px 40px;
   box-sizing: border-box;
   display: flex;
@@ -292,7 +292,7 @@ html, body {
   <div class="carousel-wrapper">
     <div id="carousel" class="carousel-grid"></div>
   </div>
-  <div class="aviso-programacao">
+  <div class="aviso-programacao" id="aviso-texto">
     * A programação dos canais é de responsabilidade das emissoras e está sujeita a alterações sem aviso prévio.
   </div>
 </div>
@@ -302,9 +302,9 @@ html, body {
 // CONFIGURAÇÃO DE FONTES EPG
 // ============================================================================
 const EPG_URLS = [
-  { idFonte: 3, url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg3.xml", ajusteHoras: 0 },
-  { idFonte: 1, url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg1.xml", ajusteHoras: 0 },
-  { idFonte: 2, url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg2.xml", ajusteHoras: 0 }
+  { idFonte: 1, tag: ".", url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg1.xml" },
+  { idFonte: 2, tag: "..", url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg2.xml" },
+  { idFonte: 3, tag: "...", url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg3.xml" }
 ];
 
 // ============================================================================
@@ -404,13 +404,85 @@ const canais = [
 ];
 
 // ============================================================================
+// CARREGADOR DE EPG COM RASTREIO DE FONTE
+// ============================================================================
+let epgData = {};
+
+function converterDataXML(dataStr) {
+  if (!dataStr || dataStr.length < 14) return null;
+  const ano = parseInt(dataStr.substr(0, 4));
+  const mes = parseInt(dataStr.substr(4, 2)) - 1;
+  const dia = parseInt(dataStr.substr(6, 2));
+  const hora = parseInt(dataStr.substr(8, 2));
+  const min = parseInt(dataStr.substr(10, 2));
+  const seg = parseInt(dataStr.substr(12, 2));
+  return new Date(Date.UTC(ano, mes, dia, hora, min, seg));
+}
+
+async function baixarEPG() {
+  for (const fonte of EPG_URLS) {
+    try {
+      const resp = await fetch(fonte.url);
+      const xmlTexto = await resp.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlTexto, "text/xml");
+      const programas = xmlDoc.getElementsByTagName("programme");
+
+      for (let p of programas) {
+        const channelId = p.getAttribute("channel");
+        const start = converterDataXML(p.getAttribute("start"));
+        const stop = converterDataXML(p.getAttribute("stop"));
+        const titleEl = p.getElementsByTagName("title")[0];
+        const title = titleEl ? titleEl.textContent : "Sem Título";
+
+        if (!epgData[channelId]) epgData[channelId] = [];
+        epgData[channelId].push({ start, stop, title, fonteTag: fonte.tag });
+      }
+    } catch (e) {
+      console.log("Erro ao carregar fonte EPG: " + fonte.url);
+    }
+  }
+}
+
+function obterProgramaAtual(canal) {
+  const agora = new Date();
+  let programasDoCanal = [];
+
+  for (let id of canal.id) {
+    if (epgData[id]) {
+      programasDoCanal = epgData[id];
+      break;
+    }
+  }
+
+  if (programasDoCanal.length === 0) return null;
+
+  let atual = null;
+  let proximo = null;
+
+  for (let i = 0; i < programasDoCanal.length; i++) {
+    const prog = programasDoCanal[i];
+    if (agora >= prog.start && agora < prog.stop) {
+      atual = prog;
+      proximo = programasDoCanal[i + 1] || null;
+      break;
+    }
+  }
+
+  return { atual, proximo };
+}
+
+baixarEPG();
+setInterval(baixarEPG, 1800000);
+
+// ============================================================================
 // BUSCA DE NOTÍCIAS RSS
 // ============================================================================
 let noticiasRegionais = [
   {
     cidade: "São Paulo / Região",
-    titulo: "Carregando notícias em tempo real...",
-    resumo: "Por favor, aguarde enquanto atualizamos o feed.",
+    titulo: "Atualizando dados das notícias regionais...",
+    resumo: "Por favor, aguarde alguns instantes enquanto conectamos ao servidor.",
     fonte: "G1 Regional"
   }
 ];
@@ -418,8 +490,7 @@ let noticiasRegionais = [
 const FONTES_RSS = [
   { url: "https://g1.globo.com/rss/g1/sp/sao-carlos-regiao/", cidade: "São Carlos e Região", fonte: "G1 São Carlos" },
   { url: "https://g1.globo.com/rss/g1/sao-paulo/", cidade: "São Paulo / SP", fonte: "G1 SP" },
-  { url: "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml", cidade: "Brasil", fonte: "Agência Brasil" },
-  { url: "https://rss.uol.com.br/feed/noticias.xml", cidade: "Notícias Úteis", fonte: "UOL" }
+  { url: "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml", cidade: "Brasil / Geral", fonte: "Agência Brasil" }
 ];
 
 function limparHTML(html) {
@@ -489,33 +560,60 @@ atualizarNoticiasRSS();
 setInterval(atualizarNoticiasRSS, 300000);
 
 // ============================================================================
-// LOGICA DE ROTAÇÃO E RENDERIZAÇÃO DO CARROSSEL
+// CARROSSEL: CANAIS E NOTÍCIAS COM MARCADOR DE FONTE
 // ============================================================================
 let paginaAtual = 0;
 const itensPorPagina = 6; 
-let contadorTrocas = 0;
+let contadorExibicao = 0;
 let indiceNoticiaAtual = 0;
+
+function formatarHora(dateObj) {
+  if (!dateObj) return "--:--";
+  return dateObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+}
 
 function renderizarCarrossel() {
   const container = document.getElementById("carousel");
+  const avisoElemento = document.getElementById("aviso-texto");
   if (!container) return;
 
   const totalPaginasCanais = Math.ceil(canais.length / itensPorPagina);
 
-  // A cada 3 trocas de páginas de canais, exibe 1 notícia
-  if (contadorTrocas > 0 && contadorTrocas % 3 === 0) {
+  if (contadorExibicao > 0 && contadorExibicao % 2 === 0) {
     renderizarNoticia(container);
-    contadorTrocas = 0; 
+    if(avisoElemento) {
+      avisoElemento.innerHTML = `* A programação dos canais é de responsabilidade das emissoras e está sujeita a alterações sem aviso prévio.`;
+    }
+    contadorExibicao = 0; 
     return;
   }
 
-  // Renderiza Página de Canais
   container.innerHTML = "";
   const inicio = paginaAtual * itensPorPagina;
   const fim = inicio + itensPorPagina;
   const canaisPagina = canais.slice(inicio, fim);
+  
+  let ultimaTagFonteUsada = "."; 
 
   canaisPagina.forEach(canal => {
+    const infoProg = obterProgramaAtual(canal);
+    let tituloProg = "Programação Indisponível";
+    let proximoProg = "Próximo: --:--";
+    let progressoPercent = 0;
+
+    if (infoProg && infoProg.atual) {
+      tituloProg = infoProg.atual.title;
+      ultimaTagFonteUsada = infoProg.atual.fonteTag || ".";
+      const agora = new Date();
+      const duracaoTotal = infoProg.atual.stop - infoProg.atual.start;
+      const decorrido = agora - infoProg.atual.start;
+      progressoPercent = Math.min(100, Math.max(0, (decorrido / duracaoTotal) * 100));
+
+      if (infoProg.proximo) {
+        proximoProg = `Próximo: ${formatarHora(infoProg.proximo.start)} ${infoProg.proximo.title}`;
+      }
+    }
+
     const div = document.createElement("div");
     div.className = "channel";
     div.innerHTML = `
@@ -524,16 +622,20 @@ function renderizarCarrossel() {
       </div>
       <div class="channel-info">
         <div class="title">${canal.num} - ${canal.nome}</div>
-        <div class="program">Carregando programação...</div>
-        <div class="next">Próximo: --:--</div>
-        <div class="progress"><div class="bar" style="width: 0%"></div></div>
+        <div class="program">${tituloProg}</div>
+        <div class="next">${proximoProg}</div>
+        <div class="progress"><div class="bar" style="width: ${progressoPercent}%"></div></div>
       </div>
     `;
     container.appendChild(div);
   });
 
+  if(avisoElemento) {
+    avisoElemento.innerHTML = `* A programação dos canais é de responsabilidade das emissoras e está sujeita a alterações sem aviso prévio<span class="fonte-tag">${ultimaTagFonteUsada}</span>`;
+  }
+
   paginaAtual = (paginaAtual + 1) % totalPaginasCanais;
-  contadorTrocas++;
+  contadorExibicao++;
 }
 
 function renderizarNoticia(container) {
@@ -553,7 +655,7 @@ function renderizarNoticia(container) {
       </div>
       <div class="noticia-footer">
         <span>Fonte: <strong class="noticia-fonte">${noticia.fonte}</strong></span>
-        <span>Atualizado em tempo real</span>
+        <span>Informação em tempo real</span>
       </div>
     </div>
   `;
@@ -561,9 +663,8 @@ function renderizarNoticia(container) {
   indiceNoticiaAtual = (indiceNoticiaAtual + 1) % noticiasRegionais.length;
 }
 
-// Inicia o carrossel e troca a cada 10 segundos (10000 ms)
 renderizarCarrossel();
-setInterval(renderizarCarrossel, 10000);
+setInterval(renderizarCarrossel, 8000);
 
 /* ===== DATA E HORA ===== */
 function atualizarWidgetHorario() {
