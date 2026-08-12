@@ -229,17 +229,25 @@ html, body {
 }
 
 .noticia-titulo {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   color: #ffffff;
   line-height: 1.3;
   margin: 15px 0 10px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .noticia-resumo {
-  font-size: 18px;
+  font-size: 17px;
   color: #cbd5e1;
   line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .noticia-footer {
@@ -384,34 +392,51 @@ const canais = [
 ];
 
 // ============================================================================
-// BASE DE NOTÍCIAS REGIONAIS (ROTATIVAS)
+// BUSCA E ROTAÇÃO DE NOTÍCIAS AUTOMÁTICAS (RSS)
 // ============================================================================
-const noticiasRegionais = [
+let noticiasRegionais = [
   {
-    cidade: "Leme / SP",
-    titulo: "Prefeitura e Defesa Civil intensificam ações de prevenção no período de chuvas",
-    resumo: "Equipes monitoram pontos de alagamento e realizam limpeza preventiva de canais e bueiros para evitar transtornos nos bairros.",
-    fonte: "G1 São Carlos e Araraquara / EPTV"
-  },
-  {
-    cidade: "Santa Cruz da Conceição / SP",
-    titulo: "Orla da Represa passa por melhorias na infraestrutura e segurança",
-    resumo: "Investimentos do município visam fortalecer o turismo local e oferecer melhor estrutura de lazer para moradores e visitantes.",
-    fonte: "Portal Regional de Notícias"
-  },
-  {
-    cidade: "Araras / SP",
-    titulo: "Mutirão da Saúde realiza atendimento especializado e exames preventivos",
-    resumo: "Ação realizada nas Unidades Básicas de Saúde prioriza a redução do tempo de espera em consultas pediátricas e clínica geral.",
-    fonte: "Repórter Beto Ribeiro / G1"
-  },
-  {
-    cidade: "Pirassununga / SP",
-    titulo: "AFA e órgãos locais promovem campanha de conscientização e trânsito seguro",
-    resumo: "Iniciativa integrada busca reforçar os cuidados com a velocidade e o respeito aos pedestres nas vias de maior fluxo da cidade.",
-    fonte: "EPTV Central"
+    cidade: "São Paulo / Região",
+    titulo: "Carregando as últimas notícias regionais...",
+    resumo: "Por favor, aguarde enquanto atualizamos o feed de notícias em tempo real.",
+    fonte: "G1 Regional"
   }
 ];
+
+// Busca notícias reais atualizadas da região via Feed RSS (G1 São Carlos / Araraquara)
+function atualizarNoticiasRSS() {
+  const rssUrl = "https://g1.globo.com/rss/g1/sp/sao-carlos-regiao/";
+  const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+
+  fetch(apiUrl)
+    .then(r => r.json())
+    .then(dados => {
+      if (dados && dados.status === 'ok' && dados.items && dados.items.length > 0) {
+        const novasNoticias = dados.items.slice(0, 10).map(item => {
+          // Limpa tags HTML simples do resumo
+          const tempDiv = document.createElement("div");
+          tempDiv.innerHTML = item.description || item.content || "";
+          const resumoLimpo = tempDiv.textContent || tempDiv.innerText || "Confira os detalhes no portal de notícias.";
+
+          return {
+            cidade: "Região Central / SP",
+            titulo: item.title,
+            resumo: resumoLimpo,
+            fonte: "G1 São Carlos e Araraquara"
+          };
+        });
+
+        if (novasNoticias.length > 0) {
+          noticiasRegionais = novasNoticias;
+        }
+      }
+    })
+    .catch(() => {});
+}
+
+// Atualiza notícias ao iniciar e a cada 10 minutos
+atualizarNoticiasRSS();
+setInterval(atualizarNoticiasRSS, 600000);
 
 let cacheProgramas = []; 
 let paginaAtual = 0;
@@ -533,7 +558,7 @@ function renderizarSlideNoticias() {
   box.innerHTML = `
     <div class="noticia-card">
       <div class="noticia-header">
-        <span class="noticia-tag">Notícias da Região</span>
+        <span class="noticia-tag">Notícias em Tempo Real</span>
         <span class="noticia-cidade">📍 ${noticia.cidade}</span>
       </div>
       <div>
