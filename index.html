@@ -17,7 +17,7 @@ html, body {
 }
 
 /* ==========================================
-   WIDGET DE DATA, HORA E CLIMA (MODERNO)
+   WIDGET DE DATA, HORA E CLIMA
    ========================================== */
 .widget-moderno {
   position: fixed;
@@ -69,15 +69,6 @@ html, body {
   filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
 }
 
-.aviso-programacao {
-  text-align: center;
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 12px;
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
-
 /* ==========================================
    CAROUSEL E GUIA DE PROGRAMAÇÃO
    ========================================== */
@@ -88,7 +79,7 @@ html, body {
   left: 0;
   background: transparent !important; 
   backdrop-filter: none !important;    
-  padding: 20px 0;
+  padding: 20px 0 10px 0;
   box-sizing: border-box;
   z-index: 9999;
 }
@@ -185,6 +176,21 @@ html, body {
   height: 100%;
   background: #00c853; 
   border-radius: 10px;
+}
+
+.aviso-programacao {
+  text-align: center;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 14px;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.fonte-tag {
+  font-weight: 900;
+  color: #00c853;
+  margin-left: 4px;
 }
 
 /* ==========================================
@@ -286,7 +292,7 @@ html, body {
   <div class="carousel-wrapper">
     <div id="carousel" class="carousel-grid"></div>
   </div>
-  <div class="aviso-programacao">
+  <div class="aviso-programacao" id="aviso-texto">
     * A programação dos canais é de responsabilidade das emissoras e está sujeita a alterações sem aviso prévio.
   </div>
 </div>
@@ -296,9 +302,9 @@ html, body {
 // CONFIGURAÇÃO DE FONTES EPG
 // ============================================================================
 const EPG_URLS = [
-  { idFonte: 3, url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg3.xml", ajusteHoras: 0 },
-  { idFonte: 1, url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg1.xml", ajusteHoras: 0 },
-  { idFonte: 2, url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg2.xml", ajusteHoras: 0 }
+  { idFonte: 1, tag: ".", url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg1.xml" },
+  { idFonte: 2, tag: "..", url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg2.xml" },
+  { idFonte: 3, tag: "...", url: "https://raw.githubusercontent.com/sp2telecom-spec/guia-assinante2/master/epg3.xml" }
 ];
 
 // ============================================================================
@@ -398,7 +404,7 @@ const canais = [
 ];
 
 // ============================================================================
-// CARREGADOR DE EPG (XML)
+// CARREGADOR DE EPG COM RASTREIO DE FONTE
 // ============================================================================
 let epgData = {};
 
@@ -430,7 +436,7 @@ async function baixarEPG() {
         const title = titleEl ? titleEl.textContent : "Sem Título";
 
         if (!epgData[channelId]) epgData[channelId] = [];
-        epgData[channelId].push({ start, stop, title });
+        epgData[channelId].push({ start, stop, title, fonteTag: fonte.tag });
       }
     } catch (e) {
       console.log("Erro ao carregar fonte EPG: " + fonte.url);
@@ -466,9 +472,8 @@ function obterProgramaAtual(canal) {
   return { atual, proximo };
 }
 
-// Inicia o carregamento do EPG em segundo plano
 baixarEPG();
-setInterval(baixarEPG, 1800000); // Recarrega a cada 30 minutos
+setInterval(baixarEPG, 1800000);
 
 // ============================================================================
 // BUSCA DE NOTÍCIAS RSS
@@ -555,7 +560,7 @@ atualizarNoticiasRSS();
 setInterval(atualizarNoticiasRSS, 300000);
 
 // ============================================================================
-// CARROSSEL: ALTERNÂNCIA CANAIS E NOTÍCIAS
+// CARROSSEL: CANAIS E NOTÍCIAS COM MARCADOR DE FONTE
 // ============================================================================
 let paginaAtual = 0;
 const itensPorPagina = 6; 
@@ -569,13 +574,16 @@ function formatarHora(dateObj) {
 
 function renderizarCarrossel() {
   const container = document.getElementById("carousel");
+  const avisoElemento = document.getElementById("aviso-texto");
   if (!container) return;
 
   const totalPaginasCanais = Math.ceil(canais.length / itensPorPagina);
 
-  // A cada 2 páginas de canais, mostra 1 slide de Notícias
   if (contadorExibicao > 0 && contadorExibicao % 2 === 0) {
     renderizarNoticia(container);
+    if(avisoElemento) {
+      avisoElemento.innerHTML = `* A programação dos canais é de responsabilidade das emissoras e está sujeita a alterações sem aviso prévio.`;
+    }
     contadorExibicao = 0; 
     return;
   }
@@ -584,6 +592,8 @@ function renderizarCarrossel() {
   const inicio = paginaAtual * itensPorPagina;
   const fim = inicio + itensPorPagina;
   const canaisPagina = canais.slice(inicio, fim);
+  
+  let ultimaTagFonteUsada = "."; 
 
   canaisPagina.forEach(canal => {
     const infoProg = obterProgramaAtual(canal);
@@ -593,6 +603,7 @@ function renderizarCarrossel() {
 
     if (infoProg && infoProg.atual) {
       tituloProg = infoProg.atual.title;
+      ultimaTagFonteUsada = infoProg.atual.fonteTag || ".";
       const agora = new Date();
       const duracaoTotal = infoProg.atual.stop - infoProg.atual.start;
       const decorrido = agora - infoProg.atual.start;
@@ -618,6 +629,10 @@ function renderizarCarrossel() {
     `;
     container.appendChild(div);
   });
+
+  if(avisoElemento) {
+    avisoElemento.innerHTML = `* A programação dos canais é de responsabilidade das emissoras e está sujeita a alterações sem aviso prévio<span class="fonte-tag">${ultimaTagFonteUsada}</span>`;
+  }
 
   paginaAtual = (paginaAtual + 1) % totalPaginasCanais;
   contadorExibicao++;
@@ -648,9 +663,8 @@ function renderizarNoticia(container) {
   indiceNoticiaAtual = (indiceNoticiaAtual + 1) % noticiasRegionais.length;
 }
 
-// Inicialização e Temporizadores
 renderizarCarrossel();
-setInterval(renderizarCarrossel, 8000); // Alterna as telas do carrossel a cada 8 segundos
+setInterval(renderizarCarrossel, 8000);
 
 /* ===== DATA E HORA ===== */
 function atualizarWidgetHorario() {
