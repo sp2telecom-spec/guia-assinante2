@@ -124,8 +124,9 @@ html, body {
 
 .logo {
   max-width: 100%;
-  max-height: 100px;
+  max-height: 80px;
   object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
 .channel-info {
@@ -282,7 +283,7 @@ html, body {
   <div class="data-clima">
     <span id="data">Carregando data...</span>
     <div class="clima-grupo">
-      <img id="icone" src="" style="display: none;" alt="Ícone Clima">
+      <img id="icone" src="" style="display: none;" alt="Ícone Clima" onerror="this.style.display='none';">
       <span id="temp">--°C</span>
     </div>
   </div>
@@ -404,7 +405,7 @@ const canais = [
 ];
 
 // ============================================================================
-// CARREGADOR DE EPG COM RASTREIO DE FONTE
+// CARREGADOR DE EPG COM RASTREIO DE FONTE E OTIMIZAÇÃO DE MEMÓRIA
 // ============================================================================
 let epgData = {};
 
@@ -420,6 +421,8 @@ function converterDataXML(dataStr) {
 }
 
 async function baixarEPG() {
+  epgData = {}; // Limpeza preventiva de memória antes de recarregar
+
   for (const fonte of EPG_URLS) {
     try {
       const resp = await fetch(fonte.url);
@@ -686,51 +689,36 @@ function atualizarWidgetHorario() {
 setInterval(atualizarWidgetHorario, 1000);
 atualizarWidgetHorario();
 
-/* ===== CLIMA E ÍCONE AUTOMÁTICO ===== */
+/* ===== CLIMA E ÍCONE AUTOMÁTICO (API V2) ===== */
 function obterIconeClima(code, isDay) {
-  // WMO Weather interpretation codes (Open-Meteo)
   const prefixoHora = isDay ? "d" : "n";
   
-  // Sol / Céu Limpo
   if (code === 0) return `https://openweathermap.org/img/wn/01${prefixoHora}@2x.png`;
-  
-  // Parcialmente Nublado
   if (code === 1 || code === 2) return `https://openweathermap.org/img/wn/02${prefixoHora}@2x.png`;
-  
-  // Nublado / Encoberto
   if (code === 3) return `https://openweathermap.org/img/wn/04${prefixoHora}@2x.png`;
-  
-  // Névoa / Cerração
   if (code >= 45 && code <= 48) return `https://openweathermap.org/img/wn/50${prefixoHora}@2x.png`;
-  
-  // Garoa / Chuvisco
   if (code >= 51 && code <= 57) return `https://openweathermap.org/img/wn/09d@2x.png`;
-  
-  // Chuva
   if (code >= 61 && code <= 67) return `https://openweathermap.org/img/wn/10${prefixoHora}@2x.png`;
-  
-  // Pancadas de Chuva
+  if (code >= 71 && code <= 77) return `https://openweathermap.org/img/wn/13d@2x.png`;
   if (code >= 80 && code <= 82) return `https://openweathermap.org/img/wn/09d@2x.png`;
-  
-  // Tempestade / Trovoadas
+  if (code >= 85 && code <= 86) return `https://openweathermap.org/img/wn/13d@2x.png`;
   if (code >= 95 && code <= 99) return `https://openweathermap.org/img/wn/11d@2x.png`;
   
-  // Padrão (Nublado)
   return `https://openweathermap.org/img/wn/03d@2x.png`;
 }
 
 function obterClima() {
   const lat = -22.18;
   const lon = -47.38;
-  const urlClima = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+  const urlClima = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&timezone=America%2FSao_Paulo`;
 
   fetch(urlClima)
     .then(r => r.json())
     .then(dados => {
-      if(dados && dados.current_weather) {
-        const temp = Math.round(dados.current_weather.temperature);
-        const code = dados.current_weather.weathercode;
-        const isDay = dados.current_weather.is_day === 1;
+      if(dados && dados.current) {
+        const temp = Math.round(dados.current.temperature_2m);
+        const code = dados.current.weather_code;
+        const isDay = dados.current.is_day === 1;
 
         const tempElement = document.getElementById("temp");
         const iconeElement = document.getElementById("icone");
