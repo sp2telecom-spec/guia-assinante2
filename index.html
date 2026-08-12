@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>GUIA TV NA FIBRA + OVERLAY + NOTÍCIAS</title>
+<title>GUIA TV + OVERLAY + NOTÍCIAS</title>
 
 <style>
 html, body {
@@ -176,7 +176,7 @@ html, body {
 .fonte-indicador {
   font-weight: bold;
   color: #00c853;
-  margin-left: 6px;
+  margin-left: 4px;
 }
 
 .progress {
@@ -666,7 +666,10 @@ function renderizarPagina() {
   let html = "";
   itens.forEach(ch => {
     const pct = calc(ch.start, ch.stop);
-    const fonteTexto = ch.fonteId > 0 ? `<span class="fonte-indicador">(F${ch.fonteId})</span>` : "";
+    
+    // Converte o idFonte em quantidade equivalente de pontos (1 -> ., 2 -> .., 3 -> ...)
+    const pontosFonte = ch.fonteId > 0 ? ".".repeat(ch.fonteId) : "";
+    const fonteTexto = pontosFonte ? `<span class="fonte-indicador">${pontosFonte}</span>` : "";
 
     html += `
       <div class="channel">
@@ -674,7 +677,7 @@ function renderizarPagina() {
           <img class="logo" src="${ch.logo}" alt="${ch.nome}">
         </div>
         <div class="channel-info">
-          <div class="title">${ch.num} - ${ch.nome} ${fonteTexto}</div>
+          <div class="title">${ch.num} - ${ch.nome}${fonteTexto}</div>
           <div class="program">${ch.atual}</div>
           <div class="progress"><div class="bar" style="width:${pct}%"></div></div>
           <div class="next">A seguir: ${ch.proximo}</div>
