@@ -384,9 +384,9 @@ const canais = [
   {num:"55.5", nome:"MUSIC BOX HD", id:["musicbox", "MusicBoxBrazil.br", "MusicBox.br", "426177"], logo:"https://upload.wikimedia.org/wikipedia/commons/b/b4/LogoMusicRoxo.png"},
   {num:"55.6", nome:"TNT NOVELA", id:["549987", "São.Paulo/SP..Tnt.novelas.HD.br", "São.Paulo/SP..Tnt.novelas.br", "TNTNovelas.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/3/3a/Logo_TNT_Novelas.png"},
   {num:"68.1", nome:"TRAVEL BOX", id:["travelbox", "TravelBoxBrazil.br", "TravelBox.br", "523331"], logo:"https://upload.wikimedia.org/wikipedia/commons/7/7e/TravelBoxBrazillogoatualizado.png"},
-  {num:"68.2", nome:"CHEF TV", id:["cheftv", "ChefTV.br", "Chef.tv"], logo:"https://upload.wikimedia.org/wikipedia/commons/1/1c/LOGOCHEFTV.jpg?utm_source=pt.wikipedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"},
+  {num:"68.2", nome:"CHEF TV", id:["cheftv", "ChefTV.br", "Chef.tv"], logo:"https://cheftv.com.br/wp-content/uploads/2025/11/logo-cheftv.png"},
   {num:"68.3", nome:"CINEMAX", id:["cinemax", "Cinemax.br", "CinemaxHD.br", "Sao.Paulo/SP..Cinemax.br", "São.Paulo/SP..Cinemax.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/6/66/Cinemax_2016.svg"},
-  {num:"68.4", nome:"SABOR E ARTE", id:["saborearte", "SaboreArte.br", "SaborAndArte.br", "417387"], logo:"https://upload.wikimedia.org/wikipedia/commons/a/a5/Logotipo_do_Sabor_%26_Arte.svg?utm_source=pt.wikipedia.org&utm_campaign=index&utm_content=original"},
+  {num:"68.4", nome:"SABOR E ARTE", id:["saborearte", "SaboreArte.br", "SaborAndArte.br", "417387"], logo:"https://upload.wikimedia.org/wikipedia/pt/9/98/Saborearte.png"},
   {num:"68.5", nome:"TOP FILM", id:["topfilm", "TopFilm.br", "Sao.Paulo/SP..TopFilm.br", "São.Paulo/SP..TopFilm.br"], logo:"https://cdn-icons-png.flaticon.com/512/5988/5988394.png"},
   {num:"68.6", nome:"ADULT SWIM", id:["adult_swim", "adultswim", "AdultSwim.br", "AdultSwimHD.br", "417185"], logo:"https://upload.wikimedia.org/wikipedia/commons/e/e4/Adult_Swim_2003_logo.svg"},
   {num:"69.2", nome:"TV LEME", id:["tvleme", "TVLeme.br", "Sao.Paulo/SP..TVLEME.br", "São.Paulo/SP..TVLEME.br"], logo:"https://play-lh.googleusercontent.com/lZew_kFAy5WM3M5tmbJE8p1f1UQUaYpHML2angwnyCrlDPusa1oxKKiACBI89H2wnCjx"},
@@ -404,7 +404,7 @@ const canais = [
 ];
 
 // ============================================================================
-// BUSCA DE NOTÍCIAS RSS
+// BUSCA DE NOTÍCIAS RSS (ROBUSTO COM LEITOR XML DIRETO)
 // ============================================================================
 let noticiasRegionais = [
   {
@@ -415,36 +415,65 @@ let noticiasRegionais = [
   }
 ];
 
+function processarXMLNoticias(xmlDoc) {
+  const items = xmlDoc.querySelectorAll("item");
+  if (!items || items.length === 0) return false;
+
+  const novasNoticias = [];
+  items.forEach((item, index) => {
+    if (index >= 10) return;
+
+    const title = item.querySelector("title") ? item.querySelector("title").textContent : "Sem Título";
+    const rawDesc = item.querySelector("description") ? item.querySelector("description").textContent : "";
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = rawDesc;
+    const resumoLimpo = tempDiv.textContent || tempDiv.innerText || "Confira os detalhes no portal de notícias.";
+
+    novasNoticias.push({
+      cidade: "Região Central / SP",
+      titulo: title,
+      resumo: resumoLimpo.trim(),
+      fonte: "G1 São Carlos e Araraquara"
+    });
+  });
+
+  if (novasNoticias.length > 0) {
+    noticiasRegionais = novasNoticias;
+    return true;
+  }
+  return false;
+}
+
 function atualizarNoticiasRSS() {
   const rssUrl = "https://g1.globo.com/rss/g1/sp/sao-carlos-regiao/";
-  const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
 
-  fetch(apiUrl)
+  // Tentativa 1: Busca via proxy CORS seguro
+  fetch(proxyUrl)
     .then(r => r.json())
-    .then(dados => {
-      if (dados && dados.status === 'ok' && dados.items && dados.items.length > 0) {
-        const novasNoticias = dados.items.slice(0, 10).map(item => {
-          const tempDiv = document.createElement("div");
-          tempDiv.innerHTML = item.description || item.content || "";
-          const resumoLimpo = tempDiv.textContent || tempDiv.innerText || "Confira os detalhes no portal de notícias.";
-
-          return {
-            cidade: "Região Central / SP",
-            titulo: item.title,
-            resumo: resumoLimpo,
-            fonte: "G1 São Carlos e Araraquara"
-          };
-        });
-
-        if (novasNoticias.length > 0) {
-          noticiasRegionais = novasNoticias;
-        }
+    .then(data => {
+      if (data && data.contents) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+        processarXMLNoticias(xmlDoc);
       }
     })
-    .catch(() => {});
+    .catch(() => {
+      // Tentativa 2: Busca Direta (caso a execução seja local sem restrições)
+      fetch(rssUrl)
+        .then(r => r.text())
+        .then(str => {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(str, "text/xml");
+          processarXMLNoticias(xmlDoc);
+        })
+        .catch(() => {});
+    });
 }
+
 atualizarNoticiasRSS();
-setInterval(atualizarNoticiasRSS, 600000);
+setInterval(atualizarNoticiasRSS, 300000); // Atualiza notícias a cada 5 minutos
 
 /* ===== VARIÁVEIS DE CONTROLE DO CARROSSEL ===== */
 let cacheProgramas = []; 
@@ -579,7 +608,7 @@ async function carregarEPG() {
       const xmlDoc = parser.parseFromString(xmlText, "text/xml");
 
       canais.forEach((ch, idx) => {
-        if (progs[idx].fonteId > 0) return; // Já achou programa em fonte prioritária
+        if (progs[idx].fonteId > 0) return;
 
         let channelNodes = Array.from(xmlDoc.querySelectorAll("channel")).filter(c => {
           const id = c.getAttribute("id");
