@@ -404,23 +404,22 @@ const canais = [
 ];
 
 // ============================================================================
-// BUSCA DE NOTÍCIAS RSS (SISTEMA COM MÚLTIPLAS FONTES E FALLBACK ROBUTO)
+// BUSCA DE NOTÍCIAS RSS
 // ============================================================================
 let noticiasRegionais = [
   {
     cidade: "São Paulo / Região",
-    titulo: "Carregando as últimas notícias regionais...",
-    resumo: "Por favor, aguarde enquanto atualizamos o feed de notícias em tempo real.",
+    titulo: "Carregando notícias em tempo real...",
+    resumo: "Por favor, aguarde enquanto atualizamos o feed.",
     fonte: "G1 Regional"
   }
 ];
 
-// Fontes de notícias de reserva e regionais adicionadas
 const FONTES_RSS = [
   { url: "https://g1.globo.com/rss/g1/sp/sao-carlos-regiao/", cidade: "São Carlos e Região", fonte: "G1 São Carlos" },
   { url: "https://g1.globo.com/rss/g1/sao-paulo/", cidade: "São Paulo / SP", fonte: "G1 SP" },
-  { url: "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml", cidade: "Brasil / Geral", fonte: "Agência Brasil" },
-  { url: "https://rss.uol.com.br/feed/noticias.xml", cidade: "Notícias Úteis", fonte: "UOL Notícias" }
+  { url: "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml", cidade: "Brasil", fonte: "Agência Brasil" },
+  { url: "https://rss.uol.com.br/feed/noticias.xml", cidade: "Notícias Úteis", fonte: "UOL" }
 ];
 
 function limparHTML(html) {
@@ -430,7 +429,6 @@ function limparHTML(html) {
 }
 
 async function carregarFeed(fonteObj) {
-  // Método 1: Tenta rss2json
   try {
     const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(fonteObj.url)}`);
     const data = await res.json();
@@ -442,11 +440,8 @@ async function carregarFeed(fonteObj) {
         fonte: fonteObj.fonte
       }));
     }
-  } catch (e) {
-    // Caso ocorra erro, tenta o método secundário abaixo
-  }
+  } catch (e) {}
 
-  // Método 2: Fallback com AllOrigins + XMLParser
   try {
     const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(fonteObj.url)}`;
     const res = await fetch(proxyUrl);
@@ -479,28 +474,96 @@ async function carregarFeed(fonteObj) {
 
 async function atualizarNoticiasRSS() {
   let novasNoticias = [];
-  
   for (const fonte of FONTES_RSS) {
     const noticias = await carregarFeed(fonte);
     if (noticias && noticias.length > 0) {
       novasNoticias = novasNoticias.concat(noticias);
     }
   }
-
   if (novasNoticias.length > 0) {
     noticiasRegionais = novasNoticias;
   }
 }
 
 atualizarNoticiasRSS();
-setInterval(atualizarNoticiasRSS, 300000); // Atualiza notícias a cada 5 minutos
+setInterval(atualizarNoticiasRSS, 300000);
 
-/* ===== VARIÁVEIS DE CONTROLE DO CARROSSEL ===== */
-let cacheProgramas = []; 
+// ============================================================================
+// LOGICA DE ROTAÇÃO E RENDERIZAÇÃO DO CARROSSEL
+// ============================================================================
 let paginaAtual = 0;
 const itensPorPagina = 6; 
-let contadorPaginasCanais = 0;
+let contadorTrocas = 0;
 let indiceNoticiaAtual = 0;
+
+function renderizarCarrossel() {
+  const container = document.getElementById("carousel");
+  if (!container) return;
+
+  const totalPaginasCanais = Math.ceil(canais.length / itensPorPagina);
+
+  // A cada 3 trocas de páginas de canais, exibe 1 notícia
+  if (contadorTrocas > 0 && contadorTrocas % 3 === 0) {
+    renderizarNoticia(container);
+    contadorTrocas = 0; 
+    return;
+  }
+
+  // Renderiza Página de Canais
+  container.innerHTML = "";
+  const inicio = paginaAtual * itensPorPagina;
+  const fim = inicio + itensPorPagina;
+  const canaisPagina = canais.slice(inicio, fim);
+
+  canaisPagina.forEach(canal => {
+    const div = document.createElement("div");
+    div.className = "channel";
+    div.innerHTML = `
+      <div class="logo-container">
+        <img class="logo" src="${canal.logo}" alt="${canal.nome}" onerror="this.src='https://via.placeholder.com/95x60?text=TV'">
+      </div>
+      <div class="channel-info">
+        <div class="title">${canal.num} - ${canal.nome}</div>
+        <div class="program">Carregando programação...</div>
+        <div class="next">Próximo: --:--</div>
+        <div class="progress"><div class="bar" style="width: 0%"></div></div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+
+  paginaAtual = (paginaAtual + 1) % totalPaginasCanais;
+  contadorTrocas++;
+}
+
+function renderizarNoticia(container) {
+  if (!noticiasRegionais || noticiasRegionais.length === 0) return;
+
+  const noticia = noticiasRegionais[indiceNoticiaAtual];
+  
+  container.innerHTML = `
+    <div class="noticia-card">
+      <div class="noticia-header">
+        <span class="noticia-tag">ÚLTIMAS NOTÍCIAS</span>
+        <span class="noticia-cidade">${noticia.cidade}</span>
+      </div>
+      <div>
+        <div class="noticia-titulo">${noticia.titulo}</div>
+        <div class="noticia-resumo">${noticia.resumo}</div>
+      </div>
+      <div class="noticia-footer">
+        <span>Fonte: <strong class="noticia-fonte">${noticia.fonte}</strong></span>
+        <span>Atualizado em tempo real</span>
+      </div>
+    </div>
+  `;
+
+  indiceNoticiaAtual = (indiceNoticiaAtual + 1) % noticiasRegionais.length;
+}
+
+// Inicia o carrossel e troca a cada 10 segundos (10000 ms)
+renderizarCarrossel();
+setInterval(renderizarCarrossel, 10000);
 
 /* ===== DATA E HORA ===== */
 function atualizarWidgetHorario() {
@@ -540,7 +603,7 @@ function obterClima() {
     .catch(() => {});
 }
 obterClima();
-setInterval(obterClima, 600000); // Atualiza clima a cada 10 minutos
+setInterval(obterClima, 600000);
 </script>
 </body>
 </html>
