@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>GUIA TV + OVERLAY + NOTÍCIAS</title>
+<title>GUIA TV NA FIBRA + OVERLAY + NOTÍCIAS</title>
 
 <style>
 html, body {
@@ -28,12 +28,12 @@ html, body {
   align-items: flex-end; 
   gap: 4px;
   padding: 15px 25px;
-  background: transparent; /* AJUSTADO: Fundo transparente */
-  backdrop-filter: none; /* AJUSTADO: Removido o desfoque de fundo */
+  background: transparent;
+  backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border-radius: 20px;
-  border: none; /* AJUSTADO: Removida a borda do container */
-  box-shadow: none; /* AJUSTADO: Removida a sombra do container */
+  border: none;
+  box-shadow: none;
   z-index: 10000;
 }
 
@@ -49,7 +49,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 16px;
-  font-size: 22px; /* AJUSTADO: Aumentado de 16px para 22px */
+  font-size: 22px;
   font-weight: 400;
   opacity: 0.9;
   text-transform: capitalize; 
@@ -68,7 +68,7 @@ html, body {
   height: 32px;
   filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
 }
-/* Aviso de programação no rodapé */
+
 .aviso-programacao {
   text-align: center;
   font-size: 18px;
@@ -77,6 +77,7 @@ html, body {
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
+
 /* ==========================================
    CAROUSEL E GUIA DE PROGRAMAÇÃO
    ========================================== */
@@ -291,11 +292,11 @@ html, body {
   <div class="carousel-wrapper">
     <div id="carousel" class="carousel-grid"></div>
   </div>
-  <!-- AVISO FIXO ADICIONADO AQUI -->
   <div class="aviso-programacao">
     * A programação dos canais é de responsabilidade das emissoras e está sujeita a alterações sem aviso prévio.
   </div>
 </div>
+
 <script>
 // ============================================================================
 // CONFIGURAÇÃO DE FONTES EPG
@@ -307,7 +308,7 @@ const EPG_URLS = [
 ];
 
 // ============================================================================
-// LISTA ATUALIZADA DE CANAIS
+// LISTA DE CANAIS
 // ============================================================================
 const canais = [
   {num:"01.1", nome:"JOVEM PAN", id:["jovempannews", "jovem_pan_news", "JovemPanNews.br", "Jovem.Pan.News.br", "417187"], logo:"https://upload.wikimedia.org/wikipedia/commons/4/41/Logotipo_da_TV_Jovem_Pan_News.png"},
@@ -392,18 +393,18 @@ const canais = [
   {num:"69.3", nome:"AMC", id:["amc", "AMC.br", "AMCHD.br", "Sao.Paulo/SP..AMC.br", "São.Paulo/SP..AMC.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/3/34/AMC_logo_2019.svg"},
   {num:"69.4", nome:"PRIME BOX", id:["primebox", "PrimeBoxBrazil.br", "PrimeBox.br", "426151"], logo:"https://upload.wikimedia.org/wikipedia/commons/1/16/PrimeBoxBrazil2019.png"},
   {num:"69.5", nome:"CAZE TV", id:["caze_tv", "cazetv", "CazeTV.br", "Caze.tv"], logo:"https://upload.wikimedia.org/wikipedia/pt/2/22/Logotipo_da_Caz%C3%A9TV.png"},
-  {num:"70.1", nome:"HBO", id:["hbo", "HBO.br", "HBOHD.br", "Sao.Paulo/SP..HBO.br", "São.Paulo/SP..HBO.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/d/de/HBO_logo.svg?utm_source=pt.wikipedia.org&utm_campaign=index&utm_content=original"},
-  {num:"70.2", nome:"HBO 2", id:["hbo2", "HBO2.br", "HBO2HD.br", "Sao.Paulo/SP..HBO2.br", "São.Paulo/SP..HBO2.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/6/6c/HBO2_logo.svg?utm_source=pt.wikipedia.org&utm_campaign=index&utm_content=original"},
-  {num:"70.3", nome:"HBO PLUS", id:["hboplus", "HBOPlus.br", "HBOPlusHD.br", "Sao.Paulo/SP..HBO.Plus.br", "São.Paulo/SP..HBO.Plus.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/f/f9/Logohboplus2019.svg?utm_source=pt.wikipedia.org&utm_campaign=index&utm_content=original"},
-  {num:"70.4", nome:"HBO FAMILY", id:["hbofamily", "HBOFamily.br", "HBOFamilyHD.br", "Sao.Paulo/SP..HBO.Family.br", "São.Paulo/SP..HBO.Family.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/2/22/HBO_Family.svg?utm_source=pt.wikipedia.org&utm_campaign=imageinfo&utm_content=original"},
-  {num:"70.6", nome:"HBO POP", id:["hbopop", "HBOPop.br", "HBOPopHD.br", "Sao.Paulo/SP..HBO.Pop.br", "São.Paulo/SP..HBO.Pop.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/1/1b/HBO_Pop.svg?utm_source=pt.wikipedia.org&utm_campaign=imageinfo&utm_content=original"},
-  {num:"70.7", nome:"HBO EXTREME", id:["hboextreme", "HBOExtreme.br", "HBOExtremeHD.br", "Sao.Paulo/SP..HBO.Extreme.br", "São.Paulo/SP..HBO.Extreme.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/f/fc/HBO_Xtreme.svg?utm_source=pt.wikipedia.org&utm_campaign=imageinfo&utm_content=original"},
-  {num:"70.8", nome:"HBO SIGNATURE", id:["hbosignature", "HBOSignature.br", "HBOSignatureHD.br", "Sao.Paulo/SP..HBO.Signature.br", "São.Paulo/SP..HBO.Signature.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/9e/HBO_Signature.svg?utm_source=pt.wikipedia.org&utm_campaign=imageinfo&utm_content=original"},
-  {num:"70.11", nome:"HBO MUNDI", id:["hbomundi", "HBOMundi.br", "HBOMundiHD.br", "Sao.Paulo/SP..HBO.Mundi.br", "São.Paulo/SP..HBO.Mundi.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/e/e1/HBO_Mundi.svg?utm_source=pt.wikipedia.org&utm_campaign=imageinfo&utm_content=original"}
+  {num:"70.1", nome:"HBO", id:["hbo", "HBO.br", "HBOHD.br", "Sao.Paulo/SP..HBO.br", "São.Paulo/SP..HBO.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/d/de/HBO_logo.svg"},
+  {num:"70.2", nome:"HBO 2", id:["hbo2", "HBO2.br", "HBO2HD.br", "Sao.Paulo/SP..HBO2.br", "São.Paulo/SP..HBO2.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/6/6c/HBO2_logo.svg"},
+  {num:"70.3", nome:"HBO PLUS", id:["hboplus", "HBOPlus.br", "HBOPlusHD.br", "Sao.Paulo/SP..HBO.Plus.br", "São.Paulo/SP..HBO.Plus.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/f/f9/Logohboplus2019.svg"},
+  {num:"70.4", nome:"HBO FAMILY", id:["hbofamily", "HBOFamily.br", "HBOFamilyHD.br", "Sao.Paulo/SP..HBO.Family.br", "São.Paulo/SP..HBO.Family.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/2/22/HBO_Family.svg"},
+  {num:"70.6", nome:"HBO POP", id:["hbopop", "HBOPop.br", "HBOPopHD.br", "Sao.Paulo/SP..HBO.Pop.br", "São.Paulo/SP..HBO.Pop.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/1/1b/HBO_Pop.svg"},
+  {num:"70.7", nome:"HBO EXTREME", id:["hboextreme", "HBOExtreme.br", "HBOExtremeHD.br", "Sao.Paulo/SP..HBO.Extreme.br", "São.Paulo/SP..HBO.Extreme.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/f/fc/HBO_Xtreme.svg"},
+  {num:"70.8", nome:"HBO SIGNATURE", id:["hbosignature", "HBOSignature.br", "HBOSignatureHD.br", "Sao.Paulo/SP..HBO.Signature.br", "São.Paulo/SP..HBO.Signature.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/9/9e/HBO_Signature.svg"},
+  {num:"70.11", nome:"HBO MUNDI", id:["hbomundi", "HBOMundi.br", "HBOMundiHD.br", "Sao.Paulo/SP..HBO.Mundi.br", "São.Paulo/SP..HBO.Mundi.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/e/e1/HBO_Mundi.svg"}
 ];
 
 // ============================================================================
-// BUSCA E ROTAÇÃO DE NOTÍCIAS AUTOMÁTICAS (RSS)
+// BUSCA DE NOTÍCIAS RSS
 // ============================================================================
 let noticiasRegionais = [
   {
@@ -414,7 +415,6 @@ let noticiasRegionais = [
   }
 ];
 
-// Busca notícias reais atualizadas da região via Feed RSS (G1 São Carlos / Araraquara)
 function atualizarNoticiasRSS() {
   const rssUrl = "https://g1.globo.com/rss/g1/sp/sao-carlos-regiao/";
   const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
@@ -424,7 +424,6 @@ function atualizarNoticiasRSS() {
     .then(dados => {
       if (dados && dados.status === 'ok' && dados.items && dados.items.length > 0) {
         const novasNoticias = dados.items.slice(0, 10).map(item => {
-          // Limpa tags HTML simples do resumo
           const tempDiv = document.createElement("div");
           tempDiv.innerHTML = item.description || item.content || "";
           const resumoLimpo = tempDiv.textContent || tempDiv.innerText || "Confira os detalhes no portal de notícias.";
@@ -444,11 +443,10 @@ function atualizarNoticiasRSS() {
     })
     .catch(() => {});
 }
-
-// Atualiza notícias ao iniciar e a cada 10 minutos
 atualizarNoticiasRSS();
 setInterval(atualizarNoticiasRSS, 600000);
 
+/* ===== VARIÁVEIS DE CONTROLE DO CARROSSEL ===== */
 let cacheProgramas = []; 
 let paginaAtual = 0;
 const itensPorPagina = 6; 
@@ -503,10 +501,9 @@ function obterClima() {
 obterClima();
 setInterval(obterClima, 900000);
 
-/* ===== PARSER DE DATA ===== */
+/* ===== AUXILIARES EPG ===== */
 function parseDate(t, ajusteHoras = 0) {
   if (!t) return 0;
-  
   const limpoStr = t.replace(/\s+/g, ' ').trim();
   const partes = limpoStr.split(' ');
   const limpo = partes[0];
@@ -536,7 +533,6 @@ function parseDate(t, ajusteHoras = 0) {
 
   const offsetMs = ((fusoHoras * 60) + fusoMinutos) * 60 * 1000;
   let resultadoMs = utcMs - (sinal * offsetMs);
-
   resultadoMs += (ajusteHoras * 60 * 60 * 1000);
 
   return resultadoMs;
@@ -553,6 +549,166 @@ function hora(timestamp){
   const d = new Date(timestamp);
   return d.toLocaleTimeString("pt-BR", {hour:'2-digit', minute:'2-digit'});
 }
+
+// ============================================================================
+// CARREGAMENTO DO EPG E RENDERIZAÇÃO
+// ============================================================================
+async function carregarEPG() {
+  const agora = Date.now();
+  const progs = [];
+
+  for (const canal of canais) {
+    progs.push({
+      num: canal.num,
+      nome: canal.nome,
+      logo: canal.logo,
+      atual: "Programação indisponível",
+      proximo: "Em breve",
+      start: 0,
+      stop: 0,
+      fonteId: 0
+    });
+  }
+
+  for (const config of EPG_URLS) {
+    try {
+      const res = await fetch(config.url);
+      if (!res.ok) continue;
+      const xmlText = await res.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+      canais.forEach((ch, idx) => {
+        if (progs[idx].fonteId > 0) return; // Já achou programa em fonte prioritária
+
+        let channelNodes = Array.from(xmlDoc.querySelectorAll("channel")).filter(c => {
+          const id = c.getAttribute("id");
+          return id && ch.id.some(chId => chId.toLowerCase() === id.toLowerCase());
+        });
+
+        if (channelNodes.length === 0) return;
+
+        let foundIds = channelNodes.map(c => c.getAttribute("id"));
+        let programmes = Array.from(xmlDoc.querySelectorAll("programme")).filter(p => 
+          foundIds.includes(p.getAttribute("channel"))
+        );
+
+        let progAtual = null;
+        let progProx = null;
+
+        for (let p of programmes) {
+          let s = parseDate(p.getAttribute("start"), config.ajusteHoras);
+          let e = parseDate(p.getAttribute("stop"), config.ajusteHoras);
+
+          if (agora >= s && agora <= e) {
+            progAtual = p;
+          } else if (agora < s && (!progProx || s < parseDate(progProx.getAttribute("start"), config.ajusteHoras))) {
+            progProx = p;
+          }
+        }
+
+        if (progAtual) {
+          progs[idx].atual = progAtual.querySelector("title") ? progAtual.querySelector("title").textContent : "Sem Título";
+          progs[idx].start = parseDate(progAtual.getAttribute("start"), config.ajusteHoras);
+          progs[idx].stop = parseDate(progAtual.getAttribute("stop"), config.ajusteHoras);
+          progs[idx].fonteId = config.idFonte;
+
+          if (progProx) {
+            const horaProx = hora(parseDate(progProx.getAttribute("start"), config.ajusteHoras));
+            const titProx = progProx.querySelector("title") ? progProx.querySelector("title").textContent : "A seguir";
+            progs[idx].proximo = `${horaProx} ${titProx}`;
+          } else {
+            progs[idx].proximo = "Programação subsequente indisponível";
+          }
+        }
+      });
+    } catch(e) {}
+  }
+
+  cacheProgramas = progs;
+  renderizarPagina();
+}
+
+// ============================================================================
+// RENDERIZAÇÃO DO CARROSSEL (CANAIS / NOTÍCIAS)
+// ============================================================================
+function renderizarPagina() {
+  const container = document.getElementById("carousel");
+  if (!container) return;
+
+  // Se completou 3 ciclos de páginas de canais, exibe o slide de notícia
+  if (contadorPaginasCanais >= 3) {
+    const noticia = noticiasRegionais[indiceNoticiaAtual % noticiasRegionais.length];
+    container.innerHTML = `
+      <div class="noticia-card">
+        <div class="noticia-header">
+          <span class="noticia-tag">Últimas Notícias</span>
+          <span class="noticia-cidade">${noticia.cidade}</span>
+        </div>
+        <div>
+          <div class="noticia-titulo">${noticia.titulo}</div>
+          <div class="noticia-resumo">${noticia.resumo}</div>
+        </div>
+        <div class="noticia-footer">
+          <span>Fonte: <strong class="noticia-fonte">${noticia.fonte}</strong></span>
+          <span>Informa SP2</span>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Caso contrário, exibe a página atual de canais (6 por página)
+  const totalPaginas = Math.ceil(canais.length / itensPorPagina);
+  const inicio = paginaAtual * itensPorPagina;
+  const itens = cacheProgramas.slice(inicio, inicio + itensPorPagina);
+
+  let html = "";
+  itens.forEach(ch => {
+    const pct = calc(ch.start, ch.stop);
+    const fonteTexto = ch.fonteId > 0 ? `<span class="fonte-indicador">(F${ch.fonteId})</span>` : "";
+
+    html += `
+      <div class="channel">
+        <div class="logo-container">
+          <img class="logo" src="${ch.logo}" alt="${ch.nome}">
+        </div>
+        <div class="channel-info">
+          <div class="title">${ch.num} - ${ch.nome} ${fonteTexto}</div>
+          <div class="program">${ch.atual}</div>
+          <div class="progress"><div class="bar" style="width:${pct}%"></div></div>
+          <div class="next">A seguir: ${ch.proximo}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function rotacionarCarrossel() {
+  const totalPaginas = Math.ceil(canais.length / itensPorPagina);
+
+  if (contadorPaginasCanais >= 3) {
+    // Sai do slide de notícia e volta aos canais
+    contadorPaginasCanais = 0;
+    indiceNoticiaAtual++;
+  } else {
+    paginaAtual++;
+    if (paginaAtual >= totalPaginas) {
+      paginaAtual = 0;
+      contadorPaginasCanais++;
+    }
+  }
+
+  renderizarPagina();
+}
+
+// Inicia o carregamento de dados e o loop do carrossel
+carregarEPG();
+setInterval(carregarEPG, 300000); // Atualiza EPG a cada 5 minutos
+setInterval(rotacionarCarrossel, 12000); // Alterna página/notícia a cada 12 segundos
 </script>
+
 </body>
 </html>
