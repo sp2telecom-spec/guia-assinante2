@@ -58,14 +58,14 @@ html, body {
 .widget-moderno .clima-grupo {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   border-left: 1px solid rgba(255, 255, 255, 0.3);
   padding-left: 12px;
 }
 
 .widget-moderno img {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
 }
 
@@ -282,7 +282,7 @@ html, body {
   <div class="data-clima">
     <span id="data">Carregando data...</span>
     <div class="clima-grupo">
-      <img id="icone" src="" style="display: none;">
+      <img id="icone" src="" style="display: none;" alt="Ícone Clima">
       <span id="temp">--°C</span>
     </div>
   </div>
@@ -686,7 +686,39 @@ function atualizarWidgetHorario() {
 setInterval(atualizarWidgetHorario, 1000);
 atualizarWidgetHorario();
 
-/* ===== CLIMA ===== */
+/* ===== CLIMA E ÍCONE AUTOMÁTICO ===== */
+function obterIconeClima(code, isDay) {
+  // WMO Weather interpretation codes (Open-Meteo)
+  const prefixoHora = isDay ? "d" : "n";
+  
+  // Sol / Céu Limpo
+  if (code === 0) return `https://openweathermap.org/img/wn/01${prefixoHora}@2x.png`;
+  
+  // Parcialmente Nublado
+  if (code === 1 || code === 2) return `https://openweathermap.org/img/wn/02${prefixoHora}@2x.png`;
+  
+  // Nublado / Encoberto
+  if (code === 3) return `https://openweathermap.org/img/wn/04${prefixoHora}@2x.png`;
+  
+  // Névoa / Cerração
+  if (code >= 45 && code <= 48) return `https://openweathermap.org/img/wn/50${prefixoHora}@2x.png`;
+  
+  // Garoa / Chuvisco
+  if (code >= 51 && code <= 57) return `https://openweathermap.org/img/wn/09d@2x.png`;
+  
+  // Chuva
+  if (code >= 61 && code <= 67) return `https://openweathermap.org/img/wn/10${prefixoHora}@2x.png`;
+  
+  // Pancadas de Chuva
+  if (code >= 80 && code <= 82) return `https://openweathermap.org/img/wn/09d@2x.png`;
+  
+  // Tempestade / Trovoadas
+  if (code >= 95 && code <= 99) return `https://openweathermap.org/img/wn/11d@2x.png`;
+  
+  // Padrão (Nublado)
+  return `https://openweathermap.org/img/wn/03d@2x.png`;
+}
+
 function obterClima() {
   const lat = -22.18;
   const lon = -47.38;
@@ -697,8 +729,17 @@ function obterClima() {
     .then(dados => {
       if(dados && dados.current_weather) {
         const temp = Math.round(dados.current_weather.temperature);
+        const code = dados.current_weather.weathercode;
+        const isDay = dados.current_weather.is_day === 1;
+
         const tempElement = document.getElementById("temp");
+        const iconeElement = document.getElementById("icone");
+
         if(tempElement) tempElement.innerText = `${temp}°C`;
+        if(iconeElement) {
+          iconeElement.src = obterIconeClima(code, isDay);
+          iconeElement.style.display = "block";
+        }
       }
     })
     .catch(() => {});
