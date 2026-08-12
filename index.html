@@ -28,12 +28,12 @@ html, body {
   align-items: flex-end; 
   gap: 4px;
   padding: 15px 25px;
-  background: rgba(15, 15, 15, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: transparent; /* AJUSTADO: Fundo transparente */
+  backdrop-filter: none; /* AJUSTADO: Removido o desfoque de fundo */
+  -webkit-backdrop-filter: none;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border: none; /* AJUSTADO: Removida a borda do container */
+  box-shadow: none; /* AJUSTADO: Removida a sombra do container */
   z-index: 10000;
 }
 
@@ -49,7 +49,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 16px;
-  font-size: 16px;
+  font-size: 22px; /* AJUSTADO: Aumentado de 16px para 22px */
   font-weight: 400;
   opacity: 0.9;
   text-transform: capitalize; 
@@ -118,7 +118,7 @@ html, body {
   display: flex;
   flex-direction: row; 
   align-items: center; 
-  gap: 18px;               
+  gap: 18px;                
 }
 
 .logo-container {
@@ -551,163 +551,8 @@ function calc(start, stop){
 function hora(timestamp){
   if(!timestamp) return "--:--";
   const d = new Date(timestamp);
-  return d.toLocaleTimeString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
+  return d.toLocaleTimeString("pt-BR", {hour:'2-digit', minute:'2-digit'});
 }
-
-/* ===== RENDERIZAR NOTÍCIA REGIONAL ===== */
-function renderizarSlideNoticias() {
-  const box = document.getElementById("carousel");
-  if (!box) return;
-
-  const noticia = noticiasRegionais[indiceNoticiaAtual];
-  indiceNoticiaAtual = (indiceNoticiaAtual + 1) % noticiasRegionais.length;
-
-  box.innerHTML = `
-    <div class="noticia-card">
-      <div class="noticia-header">
-        <span class="noticia-tag">Notícias em Tempo Real</span>
-        <span class="noticia-cidade">📍 ${noticia.cidade}</span>
-      </div>
-      <div>
-        <div class="noticia-titulo">${noticia.titulo}</div>
-        <div class="noticia-resumo">${noticia.resumo}</div>
-      </div>
-      <div class="noticia-footer">
-        <span>Fonte: <strong class="noticia-fonte">${noticia.fonte}</strong></span>
-        <span>Informa Regional</span>
-      </div>
-    </div>
-  `;
-}
-
-/* ===== RENDERIZAR PÁGINA DE CANAIS ===== */
-function renderizarSlideCanais() {
-  const box = document.getElementById("carousel");
-  if (!box) return;
-  
-  box.innerHTML = "";
-  const now = Date.now();
-
-  const inicioIndex = paginaAtual * itensPorPagina;
-  const fimIndex = inicioIndex + itensPorPagina;
-  const canaisDaPagina = canais.slice(inicioIndex, fimIndex);
-
-  let htmlFinal = "";
-
-  canaisDaPagina.forEach(c => {
-    const listaIds = Array.isArray(c.id) ? c.id : [c.id];
-
-    let programasDoCanal = cacheProgramas.filter(p => listaIds.includes(p.channel))
-                                         .sort((a, b) => a.start - b.start);
-
-    let atual = programasDoCanal.find(p => p.start <= now && p.stop > now);
-    let pontoDeCorte = atual ? atual.stop : now;
-    let prox = programasDoCanal.find(p => p.start >= pontoDeCorte);
-
-    let titulo = atual?.title || "Sem informação de EPG";
-    let inicio = atual ? hora(atual.start) : "--:--";
-    let fim = atual ? hora(atual.stop) : "--:--";
-
-    let proxTitulo = prox?.title || "Sem info";
-    let proxHora = prox ? hora(prox.start) : "--:--";
-
-    let simboloFonte = "";
-    if (atual?.origem === 1) simboloFonte = ".";
-    else if (atual?.origem === 2) simboloFonte = "..";
-    else if (atual?.origem === 3) simboloFonte = "...";
-
-    let prog = atual ? calc(atual.start, atual.stop) : 0;
-
-    htmlFinal += `
-      <div class="channel">
-        <div class="logo-container">
-          <img class="logo" src="${c.logo}" onerror="this.style.display='none'">
-        </div>
-        <div class="channel-info">
-          <div class="title">${c.num} - ${c.nome}</div>
-          <div class="program">
-            <b>${inicio} - ${fim}</b><br>
-            ${titulo}
-          </div>
-          <div class="progress">
-            <div class="bar" style="width:${prog}%"></div>
-          </div>
-          <div class="next">
-            ➡ ${proxHora} - ${proxTitulo} <span class="fonte-indicador">${simboloFonte}</span>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-
-  box.innerHTML = htmlFinal;
-}
-
-/* ===== CONTROLE DO CARROSSEL (TROCA A CADA 15 SEG) ===== */
-function alternarCarrossel() {
-  if (contadorPaginasCanais >= 3) {
-    renderizarSlideNoticias();
-    contadorPaginasCanais = 0;
-  } else {
-    const totalPaginas = Math.ceil(canais.length / itensPorPagina);
-    renderizarSlideCanais();
-    paginaAtual = (paginaAtual + 1) % totalPaginas;
-    contadorPaginasCanais++;
-  }
-}
-
-/* ===== BUSCA DE EPG EM BACKGROUND ===== */
-function atualizarEPG(){
-  const agora = Date.now();
-  const todosOsIdsValidos = canais.flatMap(c => c.id);
-
-  const requisicoes = EPG_URLS.map(fonte => 
-    fetch(fonte.url)
-      .then(r => r.text())
-      .then(str => new DOMParser().parseFromString(str, "text/xml"))
-      .then(xml => {
-        const elementos = Array.from(xml.querySelectorAll("programme"));
-        const extraidos = [];
-
-        elementos.forEach(p => {
-          const chId = p.getAttribute("channel");
-          
-          if (todosOsIdsValidos.includes(chId)) {
-            const startMs = parseDate(p.getAttribute("start"), fonte.ajusteHoras);
-            const stopMs = parseDate(p.getAttribute("stop"), fonte.ajusteHoras);
-
-            if (stopMs > agora) {
-              extraidos.push({
-                channel: chId,
-                start: startMs,
-                stop: stopMs,
-                title: p.querySelector("title")?.textContent || "Sem título",
-                origem: fonte.idFonte
-              });
-            }
-          }
-        });
-        return extraidos;
-      })
-      .catch(() => [])
-  );
-
-  Promise.all(requisicoes).then(resultados => {
-    cacheProgramas = resultados.flat();
-  });
-}
-
-// Inicializações
-atualizarEPG();
-alternarCarrossel();
-
-setInterval(atualizarEPG, 60000); 
-setInterval(alternarCarrossel, 15000);
 </script>
-
 </body>
 </html>
