@@ -173,12 +173,6 @@ html, body {
   text-overflow: ellipsis;
 }
 
-.fonte-indicador {
-  font-weight: bold;
-  color: #00c853;
-  margin-left: 4px;
-}
-
 .progress {
   height: 5px;
   background: rgba(255, 255, 255, 0.15);
@@ -200,11 +194,11 @@ html, body {
   grid-column: span 3;
   grid-row: span 2;
   height: 338px;
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(15, 23, 42, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-radius: 20px;
-  border: 1px solid rgba(0, 200, 83, 0.5);
+  border: 1px solid rgba(0, 200, 83, 0.6);
   padding: 30px 40px;
   box-sizing: border-box;
   display: flex;
@@ -392,7 +386,7 @@ const canais = [
   {num:"69.2", nome:"TV LEME", id:["tvleme", "TVLeme.br", "Sao.Paulo/SP..TVLEME.br", "São.Paulo/SP..TVLEME.br"], logo:"https://play-lh.googleusercontent.com/lZew_kFAy5WM3M5tmbJE8p1f1UQUaYpHML2angwnyCrlDPusa1oxKKiACBI89H2wnCjx"},
   {num:"69.3", nome:"AMC", id:["amc", "AMC.br", "AMCHD.br", "Sao.Paulo/SP..AMC.br", "São.Paulo/SP..AMC.br", "São.Paulo/SP..AMC.HD.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/3/34/AMC_logo_2019.svg"},
   {num:"69.4", nome:"PRIME BOX", id:["primebox", "PrimeBoxBrazil.br", "PrimeBox.br", "São.Paulo/SP..Prime.Box.Brazil.br", "São.Paulo/SP..Prime.Box.Brazil.HD.br", "426151"], logo:"https://upload.wikimedia.org/wikipedia/commons/1/16/PrimeBoxBrazil2019.png"},
-  {num:"69.5", nome:"CAZE TV", id:["caze_tv", "cazetv", "CazeTV.br", "Caze.tv"], logo:"https://upload.wikimedia.org/wikipedia/pt/2/22/Logotipo_da_Caz%C3%A9TV.png"},
+  {num:"69.5", nome:"CAZE TV", id:["caze_tv", "cazetv", "CazeTV.br", "Caze.tv"], logo:"https://upload.wikimedia.org/wikipedia/pt/2/22/Logotipo_da_Caz%C3%A3TV.png"},
   {num:"70.1", nome:"HBO", id:["426051", "hbo", "417383", "HBO.br", "HBOHD.br", "Sao.Paulo/SP..HBO.br", "São.Paulo/SP..HBO.br", "São.Paulo/SP..HBO.HD.br", "São.Paulo/SP..HBO.HD.2.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/d/de/HBO_logo.svg"},
   {num:"70.2", nome:"HBO 2", id:["426070", "hbo2", "HBO2.br", "HBO2HD.br", "HBO.2.br", "Sao.Paulo/SP..HBO2.br", "São.Paulo/SP..HBO.2.br", "São.Paulo/SP..HBO2.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/6/6c/HBO2_logo.svg"},
   {num:"70.3", nome:"HBO PLUS", id:["hboplus", "418723", "HBOPlus.br", "HBOPlusHD.br", "HBO.Plus.br", "HBO+.br", "Sao.Paulo/SP..HBO.Plus.br", "São.Paulo/SP..HBO.Plus.br"], logo:"https://upload.wikimedia.org/wikipedia/commons/f/f9/Logohboplus2019.svg"},
@@ -404,13 +398,86 @@ const canais = [
 ];
 
 // ============================================================================
+// CARREGADOR DE EPG (XML)
+// ============================================================================
+let epgData = {};
+
+function converterDataXML(dataStr) {
+  if (!dataStr || dataStr.length < 14) return null;
+  const ano = parseInt(dataStr.substr(0, 4));
+  const mes = parseInt(dataStr.substr(4, 2)) - 1;
+  const dia = parseInt(dataStr.substr(6, 2));
+  const hora = parseInt(dataStr.substr(8, 2));
+  const min = parseInt(dataStr.substr(10, 2));
+  const seg = parseInt(dataStr.substr(12, 2));
+  return new Date(Date.UTC(ano, mes, dia, hora, min, seg));
+}
+
+async function baixarEPG() {
+  for (const fonte of EPG_URLS) {
+    try {
+      const resp = await fetch(fonte.url);
+      const xmlTexto = await resp.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlTexto, "text/xml");
+      const programas = xmlDoc.getElementsByTagName("programme");
+
+      for (let p of programas) {
+        const channelId = p.getAttribute("channel");
+        const start = converterDataXML(p.getAttribute("start"));
+        const stop = converterDataXML(p.getAttribute("stop"));
+        const titleEl = p.getElementsByTagName("title")[0];
+        const title = titleEl ? titleEl.textContent : "Sem Título";
+
+        if (!epgData[channelId]) epgData[channelId] = [];
+        epgData[channelId].push({ start, stop, title });
+      }
+    } catch (e) {
+      console.log("Erro ao carregar fonte EPG: " + fonte.url);
+    }
+  }
+}
+
+function obterProgramaAtual(canal) {
+  const agora = new Date();
+  let programasDoCanal = [];
+
+  for (let id of canal.id) {
+    if (epgData[id]) {
+      programasDoCanal = epgData[id];
+      break;
+    }
+  }
+
+  if (programasDoCanal.length === 0) return null;
+
+  let atual = null;
+  let proximo = null;
+
+  for (let i = 0; i < programasDoCanal.length; i++) {
+    const prog = programasDoCanal[i];
+    if (agora >= prog.start && agora < prog.stop) {
+      atual = prog;
+      proximo = programasDoCanal[i + 1] || null;
+      break;
+    }
+  }
+
+  return { atual, proximo };
+}
+
+// Inicia o carregamento do EPG em segundo plano
+baixarEPG();
+setInterval(baixarEPG, 1800000); // Recarrega a cada 30 minutos
+
+// ============================================================================
 // BUSCA DE NOTÍCIAS RSS
 // ============================================================================
 let noticiasRegionais = [
   {
     cidade: "São Paulo / Região",
-    titulo: "Carregando notícias em tempo real...",
-    resumo: "Por favor, aguarde enquanto atualizamos o feed.",
+    titulo: "Atualizando dados das notícias regionais...",
+    resumo: "Por favor, aguarde alguns instantes enquanto conectamos ao servidor.",
     fonte: "G1 Regional"
   }
 ];
@@ -418,8 +485,7 @@ let noticiasRegionais = [
 const FONTES_RSS = [
   { url: "https://g1.globo.com/rss/g1/sp/sao-carlos-regiao/", cidade: "São Carlos e Região", fonte: "G1 São Carlos" },
   { url: "https://g1.globo.com/rss/g1/sao-paulo/", cidade: "São Paulo / SP", fonte: "G1 SP" },
-  { url: "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml", cidade: "Brasil", fonte: "Agência Brasil" },
-  { url: "https://rss.uol.com.br/feed/noticias.xml", cidade: "Notícias Úteis", fonte: "UOL" }
+  { url: "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml", cidade: "Brasil / Geral", fonte: "Agência Brasil" }
 ];
 
 function limparHTML(html) {
@@ -489,12 +555,17 @@ atualizarNoticiasRSS();
 setInterval(atualizarNoticiasRSS, 300000);
 
 // ============================================================================
-// LOGICA DE ROTAÇÃO E RENDERIZAÇÃO DO CARROSSEL
+// CARROSSEL: ALTERNÂNCIA CANAIS E NOTÍCIAS
 // ============================================================================
 let paginaAtual = 0;
 const itensPorPagina = 6; 
-let contadorTrocas = 0;
+let contadorExibicao = 0;
 let indiceNoticiaAtual = 0;
+
+function formatarHora(dateObj) {
+  if (!dateObj) return "--:--";
+  return dateObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
+}
 
 function renderizarCarrossel() {
   const container = document.getElementById("carousel");
@@ -502,20 +573,36 @@ function renderizarCarrossel() {
 
   const totalPaginasCanais = Math.ceil(canais.length / itensPorPagina);
 
-  // A cada 3 trocas de páginas de canais, exibe 1 notícia
-  if (contadorTrocas > 0 && contadorTrocas % 3 === 0) {
+  // A cada 2 páginas de canais, mostra 1 slide de Notícias
+  if (contadorExibicao > 0 && contadorExibicao % 2 === 0) {
     renderizarNoticia(container);
-    contadorTrocas = 0; 
+    contadorExibicao = 0; 
     return;
   }
 
-  // Renderiza Página de Canais
   container.innerHTML = "";
   const inicio = paginaAtual * itensPorPagina;
   const fim = inicio + itensPorPagina;
   const canaisPagina = canais.slice(inicio, fim);
 
   canaisPagina.forEach(canal => {
+    const infoProg = obterProgramaAtual(canal);
+    let tituloProg = "Programação Indisponível";
+    let proximoProg = "Próximo: --:--";
+    let progressoPercent = 0;
+
+    if (infoProg && infoProg.atual) {
+      tituloProg = infoProg.atual.title;
+      const agora = new Date();
+      const duracaoTotal = infoProg.atual.stop - infoProg.atual.start;
+      const decorrido = agora - infoProg.atual.start;
+      progressoPercent = Math.min(100, Math.max(0, (decorrido / duracaoTotal) * 100));
+
+      if (infoProg.proximo) {
+        proximoProg = `Próximo: ${formatarHora(infoProg.proximo.start)} ${infoProg.proximo.title}`;
+      }
+    }
+
     const div = document.createElement("div");
     div.className = "channel";
     div.innerHTML = `
@@ -524,16 +611,16 @@ function renderizarCarrossel() {
       </div>
       <div class="channel-info">
         <div class="title">${canal.num} - ${canal.nome}</div>
-        <div class="program">Carregando programação...</div>
-        <div class="next">Próximo: --:--</div>
-        <div class="progress"><div class="bar" style="width: 0%"></div></div>
+        <div class="program">${tituloProg}</div>
+        <div class="next">${proximoProg}</div>
+        <div class="progress"><div class="bar" style="width: ${progressoPercent}%"></div></div>
       </div>
     `;
     container.appendChild(div);
   });
 
   paginaAtual = (paginaAtual + 1) % totalPaginasCanais;
-  contadorTrocas++;
+  contadorExibicao++;
 }
 
 function renderizarNoticia(container) {
@@ -553,7 +640,7 @@ function renderizarNoticia(container) {
       </div>
       <div class="noticia-footer">
         <span>Fonte: <strong class="noticia-fonte">${noticia.fonte}</strong></span>
-        <span>Atualizado em tempo real</span>
+        <span>Informação em tempo real</span>
       </div>
     </div>
   `;
@@ -561,9 +648,9 @@ function renderizarNoticia(container) {
   indiceNoticiaAtual = (indiceNoticiaAtual + 1) % noticiasRegionais.length;
 }
 
-// Inicia o carrossel e troca a cada 10 segundos (10000 ms)
+// Inicialização e Temporizadores
 renderizarCarrossel();
-setInterval(renderizarCarrossel, 10000);
+setInterval(renderizarCarrossel, 8000); // Alterna as telas do carrossel a cada 8 segundos
 
 /* ===== DATA E HORA ===== */
 function atualizarWidgetHorario() {
